@@ -1,0 +1,140 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap');
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Poppins', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: var(--font-sans);
+    }
+
+    a,
+    button,
+    input,
+    select,
+    article,
+    [role='button'] {
+        transition-duration: 300ms;
+        transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+}
+
+@layer utilities {
+    .transition,
+    .transition-all,
+    .transition-colors,
+    .transition-opacity,
+    .transition-transform {
+        transition-duration: 300ms;
+        transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .music-note-field {
+        pointer-events: none;
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+    }
+
+    .music-note {
+        position: absolute;
+        bottom: -10vh;
+        left: var(--note-left);
+        color: rgba(196, 181, 253, 0.2);
+        font-size: var(--note-size, 2rem);
+        line-height: 1;
+        opacity: 0;
+        text-shadow: 0 0 24px rgba(76, 29, 149, 0.55);
+        animation: music-note-float var(--note-duration, 18s) linear infinite;
+        animation-delay: var(--note-delay, 0s);
+    }
+
+    .music-note:nth-child(even) {
+        color: rgba(103, 232, 249, 0.14);
+    }
+
+    .music-note:nth-child(3n) {
+        color: rgba(244, 114, 182, 0.14);
+    }
+
+    @keyframes music-note-float {
+        0% {
+            opacity: 0;
+            transform: translate3d(0, 0, 0) rotate(-10deg) scale(0.92);
+        }
+
+        12% {
+            opacity: 1;
+        }
+
+        50% {
+            transform: translate3d(var(--note-drift, 2rem), -52vh, 0) rotate(9deg) scale(1.03);
+        }
+
+        88% {
+            opacity: 0.85;
+        }
+
+        100% {
+            opacity: 0;
+            transform: translate3d(var(--note-end-drift, -2rem), -112vh, 0) rotate(-16deg) scale(1.08);
+        }
+    }
+
+    [data-reveal] {
+        opacity: 0;
+        transform: translateY(28px);
+        transition:
+            opacity 700ms ease,
+            transform 700ms ease;
+    }
+
+    [data-reveal].is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    [data-reveal='left'] {
+        transform: translateX(-28px);
+    }
+
+    [data-reveal='right'] {
+        transform: translateX(28px);
+    }
+
+    [data-reveal='left'].is-visible,
+    [data-reveal='right'].is-visible {
+        transform: translateX(0);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        html {
+            scroll-behavior: auto;
+        }
+
+        [data-reveal] {
+            opacity: 1;
+            transform: none;
+            transition: none;
+        }
+
+        .music-note {
+            animation: none;
+            opacity: 0.12;
+            transform: none;
+        }
+    }
+}
