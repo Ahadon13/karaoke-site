@@ -12,13 +12,13 @@
         <div class="relative min-h-screen">
             <header class="sticky top-0 z-[100] border-b border-white/10 bg-[#111111]/95 backdrop-blur-2xl">
                 <nav class="mx-auto grid min-h-20 w-full max-w-[96rem] gap-3 px-4 py-3 md:grid-cols-[13rem_minmax(0,1fr)_auto] md:items-center sm:px-6 lg:px-8">
-                    <a href="{{ route('home') }}" class="text-2xl font-black">MyKaraoke</a>
-                    <form action="{{ route('songs.index') }}" class="flex items-center gap-3">
+                    <a href="{{ route('home') }}" class="hidden text-2xl font-black md:block">MyKaraoke</a>
+                    <form action="{{ route('songs.index') }}" class="flex min-w-0 flex-wrap items-center gap-3 sm:flex-nowrap">
                         <a href="{{ route('home') }}" class="hidden h-12 w-12 shrink-0 place-items-center rounded-full bg-white/[0.08] text-violet-200 transition hover:bg-[#4c1d95] hover:text-white md:grid" aria-label="Home">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5"><path fill-rule="evenodd" d="M9.293 2.293a1 1 0 0 1 1.414 0l7 7A1 1 0 0 1 17 11h-1v5a2 2 0 0 1-2 2h-2.5a.5.5 0 0 1-.5-.5V13a1 1 0 1 0-2 0v4.5a.5.5 0 0 1-.5.5H6a2 2 0 0 1-2-2v-5H3a1 1 0 0 1-.707-1.707l7-7Z" clip-rule="evenodd" /></svg>
                         </a>
-                        <input name="q" placeholder="Search songs, artists and playlists" class="min-h-12 flex-1 rounded-full border border-white/10 bg-white/[0.08] px-5 text-sm font-semibold outline-none placeholder:text-neutral-400 focus:border-violet-300 focus:ring-2 focus:ring-violet-300/30">
-                        <button class="rounded-full bg-[#4c1d95] px-5 py-3 text-sm font-bold">Search</button>
+                        <input name="q" placeholder="Search songs, artists and playlists" class="min-h-12 min-w-0 flex-1 rounded-full border border-white/10 bg-white/[0.08] px-5 text-sm font-semibold outline-none placeholder:text-neutral-400 focus:border-violet-300 focus:ring-2 focus:ring-violet-300/30">
+                        <button class="shrink-0 rounded-full bg-[#4c1d95] px-5 py-3 text-sm font-bold">Search</button>
                     </form>
                     <a href="{{ route('songs.index') }}" class="rounded-full bg-white/10 px-4 py-3 text-center text-xs font-bold transition hover:bg-[#4c1d95]/70">Songs</a>
                 </nav>
@@ -34,15 +34,15 @@
                         @endif
                     </div>
                     <div>
-                        <h1 class="text-5xl font-black leading-tight">{{ $artistName }} <span class="text-neutral-600">Karaoke</span></h1>
-                        <p class="mt-3 text-2xl font-bold text-neutral-500">Artist</p>
+                        <h1 class="text-3xl font-black leading-tight sm:text-5xl">{{ $artistName }} <span class="text-neutral-600">Karaoke</span></h1>
+                        <p class="mt-3 text-xl font-bold text-neutral-500 sm:text-2xl">Artist</p>
                         <div class="mt-8 flex flex-wrap gap-3">
                             <button type="button" class="rounded-lg bg-white/10 px-4 py-3 font-bold transition hover:bg-white/15" onclick="navigator.share?.({ title: '{{ $artistName }} Karaoke', url: window.location.href })">Share</button>
                         </div>
                     </div>
                 </section>
 
-                <section class="mt-10 rounded-lg bg-[#0d0d0f] p-6">
+                <section class="mt-10 rounded-lg bg-[#0d0d0f] p-4 sm:p-6">
                     <form class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
                         <input name="q" value="{{ $query }}" placeholder="Search {{ $artistName }} songs" class="min-h-14 rounded-full border border-white/10 bg-white/10 px-6 text-lg font-semibold outline-none placeholder:text-neutral-400 focus:border-violet-300 focus:ring-2 focus:ring-violet-300/30">
                         <div class="flex flex-wrap gap-3">

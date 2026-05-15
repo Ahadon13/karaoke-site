@@ -12,18 +12,18 @@
         <div class="relative min-h-screen">
             <header class="sticky top-0 z-[100] border-b border-white/10 bg-[#04150f]/95 backdrop-blur-2xl">
                 <nav class="mx-auto grid min-h-20 w-full max-w-[96rem] gap-3 px-4 py-3 md:grid-cols-[13rem_minmax(0,1fr)_auto] md:items-center sm:px-6 lg:px-8">
-                    <a href="{{ route('home') }}" class="text-2xl font-black tracking-tight">MyKaraoke</a>
-                    <form action="{{ route('songs.index') }}" class="flex items-center gap-3">
+                    <a href="{{ route('home') }}" class="hidden text-2xl font-black tracking-tight md:block">MyKaraoke</a>
+                    <form action="{{ route('songs.index') }}" class="flex min-w-0 flex-wrap items-center gap-3 sm:flex-nowrap">
                         <a href="{{ route('home') }}" class="hidden h-12 w-12 shrink-0 place-items-center rounded-full bg-white/[0.08] text-violet-200 transition hover:bg-[#4c1d95] hover:text-white md:grid" aria-label="Home">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5"><path fill-rule="evenodd" d="M9.293 2.293a1 1 0 0 1 1.414 0l7 7A1 1 0 0 1 17 11h-1v5a2 2 0 0 1-2 2h-2.5a.5.5 0 0 1-.5-.5V13a1 1 0 1 0-2 0v4.5a.5.5 0 0 1-.5.5H6a2 2 0 0 1-2-2v-5H3a1 1 0 0 1-.707-1.707l7-7Z" clip-rule="evenodd" /></svg>
                         </a>
-                        <div class="relative flex-1">
+                        <div class="relative min-w-0 flex-1">
                             <span class="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-neutral-400">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 3.473 9.765l2.631 2.631a.75.75 0 1 0 1.06-1.06l-2.63-2.632A5.5 5.5 0 0 0 9 3.5Zm-4 5.5a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" clip-rule="evenodd" /></svg>
                             </span>
                             <input name="q" value="{{ $query }}" placeholder="Search songs, artists and playlists" class="min-h-12 w-full rounded-full border border-white/10 bg-white/[0.08] py-3 pl-12 pr-4 text-sm font-semibold outline-none placeholder:text-neutral-400 focus:border-violet-300 focus:ring-2 focus:ring-violet-300/30">
                         </div>
-                        <button class="rounded-full bg-[#4c1d95] px-5 py-3 text-sm font-bold shadow-lg shadow-[#4c1d95]/30 transition hover:bg-[#5b21b6]">Search</button>
+                        <button class="shrink-0 rounded-full bg-[#4c1d95] px-5 py-3 text-sm font-bold shadow-lg shadow-[#4c1d95]/30 transition hover:bg-[#5b21b6]">Search</button>
                     </form>
                     <a href="{{ route('karaoke.index') }}" class="rounded-full bg-white/10 px-4 py-3 text-center text-xs font-bold transition hover:bg-[#4c1d95]/70">Karaoke room</a>
                 </nav>
@@ -36,8 +36,8 @@
                     <span class="rounded-full bg-white/10 px-5 py-3 font-bold text-neutral-400">Playlists</span>
                 </div>
 
-                <section class="grid gap-6 lg:grid-cols-[25rem_minmax(0,1fr)]">
-                    <aside class="rounded-lg bg-[#07140e] p-6">
+                <section class="grid gap-6 lg:grid-cols-[minmax(17rem,25rem)_minmax(0,1fr)]">
+                    <aside class="rounded-lg bg-[#07140e] p-4 sm:p-6">
                         <h2 class="text-2xl font-black">Filter by</h2>
 
                         <div class="mt-8">
@@ -64,7 +64,7 @@
                         </div>
                     </aside>
 
-                    <section class="rounded-lg bg-[#07140e] p-6">
+                    <section class="min-w-0 rounded-lg bg-[#07140e] p-4 sm:p-6">
                         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <h1 class="text-3xl font-black">Songs</h1>
                             <div class="flex items-center gap-3">

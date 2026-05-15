@@ -40,6 +40,7 @@ class KaraokeTest extends TestCase
             ->assertSee('z-[120]', false)
             ->assertSee('x-on:pointerdown.prevent.stop', false)
             ->assertSee('Karaoke preview')
+            ->assertSee('karaoke-overlay-controls')
             ->assertSee('Mini karaoke player')
             ->assertSee('Cancel video')
             ->assertSee('Play next')
@@ -170,7 +171,8 @@ class KaraokeTest extends TestCase
             ->assertOk()
             ->assertSee('Multo Karaoke')
             ->assertSee('More from Cup of Joe')
-            ->assertSee('Lyrics are shown inside the official karaoke video')
+            ->assertSee('Official YouTube embed')
+            ->assertDontSee('Lyrics')
             ->assertDontSee('Huminga');
 
         $this->get('/artists/'.Str::slug($song->artist_name))

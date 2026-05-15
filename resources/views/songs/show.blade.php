@@ -16,13 +16,13 @@
         <div class="relative min-h-screen">
             <header class="sticky top-0 z-[100] border-b border-white/10 bg-[#130d0d]/95 backdrop-blur-2xl">
                 <nav class="mx-auto grid min-h-20 w-full max-w-[96rem] gap-3 px-4 py-3 md:grid-cols-[13rem_minmax(0,1fr)_auto] md:items-center sm:px-6 lg:px-8">
-                    <a href="{{ route('home') }}" class="text-2xl font-black">MyKaraoke</a>
-                    <form action="{{ route('songs.index') }}" class="flex items-center gap-3">
+                    <a href="{{ route('home') }}" class="hidden text-2xl font-black md:block">MyKaraoke</a>
+                    <form action="{{ route('songs.index') }}" class="flex min-w-0 flex-wrap items-center gap-3 sm:flex-nowrap">
                         <a href="{{ route('home') }}" class="hidden h-12 w-12 shrink-0 place-items-center rounded-full bg-white/[0.08] text-violet-200 transition hover:bg-[#4c1d95] hover:text-white md:grid" aria-label="Home">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5"><path fill-rule="evenodd" d="M9.293 2.293a1 1 0 0 1 1.414 0l7 7A1 1 0 0 1 17 11h-1v5a2 2 0 0 1-2 2h-2.5a.5.5 0 0 1-.5-.5V13a1 1 0 1 0-2 0v4.5a.5.5 0 0 1-.5.5H6a2 2 0 0 1-2-2v-5H3a1 1 0 0 1-.707-1.707l7-7Z" clip-rule="evenodd" /></svg>
                         </a>
-                        <input name="q" placeholder="Search songs, artists and playlists" class="min-h-12 flex-1 rounded-full border border-white/10 bg-white/[0.08] px-5 text-sm font-semibold outline-none placeholder:text-neutral-400 focus:border-violet-300 focus:ring-2 focus:ring-violet-300/30">
-                        <button class="rounded-full bg-[#4c1d95] px-5 py-3 text-sm font-bold">Search</button>
+                        <input name="q" placeholder="Search songs, artists and playlists" class="min-h-12 min-w-0 flex-1 rounded-full border border-white/10 bg-white/[0.08] px-5 text-sm font-semibold outline-none placeholder:text-neutral-400 focus:border-violet-300 focus:ring-2 focus:ring-violet-300/30">
+                        <button class="shrink-0 rounded-full bg-[#4c1d95] px-5 py-3 text-sm font-bold">Search</button>
                     </form>
                     <a href="{{ route('songs.index') }}" class="rounded-full bg-white/10 px-4 py-3 text-center text-xs font-bold transition hover:bg-[#4c1d95]/70">Songs</a>
                 </nav>
@@ -41,8 +41,8 @@
                         @endif
                     </div>
                     <div>
-                        <h1 class="text-5xl font-black leading-tight">{{ $song->title }} <span class="text-neutral-600">Karaoke</span></h1>
-                        <a href="{{ $artistRoute }}" class="mt-4 block text-2xl font-bold text-neutral-400 transition hover:text-violet-200">{{ $song->artist_name ?: $song->channel_title }}</a>
+                        <h1 class="text-3xl font-black leading-tight sm:text-5xl">{{ $song->title }} <span class="text-neutral-600">Karaoke</span></h1>
+                        <a href="{{ $artistRoute }}" class="mt-4 block text-xl font-bold text-neutral-400 transition hover:text-violet-200 sm:text-2xl">{{ $song->artist_name ?: $song->channel_title }}</a>
                         <div class="mt-8 flex flex-wrap gap-3">
                             <button type="button" class="inline-flex items-center gap-2 rounded-lg bg-[#4c1d95] px-6 py-3 font-black text-white shadow-lg shadow-[#4c1d95]/30 transition hover:bg-[#5b21b6]" x-data x-on:click="$dispatch('mykaraoke:play', { video: @js($video) })">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5"><path d="M6.3 2.841A1.5 1.5 0 0 0 4 4.11v11.78a1.5 1.5 0 0 0 2.3 1.269l9.344-5.89a1.5 1.5 0 0 0 0-2.538L6.3 2.84Z" /></svg>

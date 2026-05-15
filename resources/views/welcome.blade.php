@@ -20,33 +20,6 @@
                     #030305;
             }
 
-            .hero-orbit {
-                background:
-                    radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.18), transparent 0.5rem),
-                    radial-gradient(circle at 68% 72%, rgba(255, 255, 255, 0.18), transparent 0.55rem),
-                    linear-gradient(145deg, #6d28d9, #4c1d95 58%, #2e1065);
-                border-radius: 46% 54% 56% 44% / 38% 44% 56% 62%;
-                filter: drop-shadow(0 2rem 3rem rgba(76, 29, 149, 0.45));
-                animation: hero-float 6s ease-in-out infinite alternate;
-            }
-
-            .hero-mouth {
-                background: #030305;
-                border-radius: 50% 50% 46% 46% / 58% 58% 42% 42%;
-                transform: rotate(8deg);
-            }
-
-            .hero-tongue {
-                background: linear-gradient(145deg, #f87171, #ef4444);
-                border-radius: 58% 42% 52% 48% / 48% 45% 55% 52%;
-            }
-
-            .dot-curtain {
-                background-image: radial-gradient(circle, rgba(34, 211, 238, 0.82) 0 0.18rem, transparent 0.2rem);
-                background-size: 1rem 1rem;
-                mask-image: linear-gradient(90deg, transparent, #000 20%, #000 82%, transparent);
-            }
-
             .feature-glow {
                 background:
                     radial-gradient(circle at 20% 20%, rgba(76, 29, 149, 0.34), transparent 16rem),
@@ -56,16 +29,6 @@
 
             .lyric-ticker {
                 animation: lyric-scroll 24s linear infinite;
-            }
-
-            @keyframes hero-float {
-                from {
-                    transform: translateY(0) rotate(-4deg);
-                }
-
-                to {
-                    transform: translateY(-1rem) rotate(4deg);
-                }
             }
 
             @keyframes lyric-scroll {
@@ -141,8 +104,8 @@
 
         <div x-data="myKaraokeHome()" x-cloak class="relative z-10">
             <header class="fixed inset-x-0 top-0 z-40 border-b border-white/10 bg-black/70 backdrop-blur-xl">
-                <nav class="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-                    <a href="{{ url('/') }}" class="text-lg font-black tracking-tight text-white transition hover:text-violet-200">
+                <nav class="mx-auto flex h-16 w-full max-w-7xl items-center justify-end px-4 md:justify-between sm:px-6 lg:px-8">
+                    <a href="{{ url('/') }}" class="hidden text-lg font-black tracking-tight text-white transition hover:text-violet-200 md:block">
                         MyKaraoke
                     </a>
 
@@ -165,14 +128,13 @@
                 <section class="relative min-h-[92vh] overflow-hidden border-b border-white/10 pt-16">
                     <div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(76,29,149,0.36),transparent_26rem)]"></div>
                     <div class="absolute -left-24 top-12 h-[28rem] w-[34rem] rounded-[45%] bg-white/[0.06] blur-2xl"></div>
-                    <div class="dot-curtain absolute right-0 top-32 hidden h-72 w-64 opacity-80 lg:block"></div>
 
-                    <div class="relative mx-auto grid min-h-[calc(92vh-4rem)] w-full max-w-7xl items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[minmax(0,1fr)_28rem] lg:px-8">
+                    <div class="relative mx-auto grid min-h-[calc(92vh-4rem)] w-full max-w-7xl items-center gap-10 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[minmax(0,1fr)_30rem] lg:px-8">
                         <div data-reveal="left">
                             <p class="mb-5 inline-flex rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-violet-100">
                                 Karaoke without the search hassle
                             </p>
-                            <h1 class="max-w-3xl text-5xl font-black leading-tight sm:text-6xl lg:text-7xl">
+                            <h1 class="max-w-3xl text-4xl font-black leading-tight sm:text-6xl lg:text-7xl">
                                 Sing your favorite karaoke songs on any device
                             </h1>
                             <p class="mt-6 max-w-2xl text-base leading-8 text-neutral-300 sm:text-lg">
@@ -194,16 +156,20 @@
                             </div>
                         </div>
 
-                        <div class="relative min-h-[22rem]" data-reveal="right" aria-hidden="true">
-                            <div class="hero-orbit absolute right-4 top-4 h-72 w-64 sm:h-80 sm:w-72">
-                                <div class="hero-mouth absolute left-[22%] top-[24%] h-[48%] w-[62%] overflow-hidden">
-                                    <div class="hero-tongue absolute bottom-0 left-[18%] h-[42%] w-[72%]"></div>
-                                </div>
-                                <span class="absolute left-10 top-8 h-4 w-16 rotate-[-28deg] rounded-full bg-white/75"></span>
-                                <span class="absolute bottom-8 right-8 h-4 w-14 rotate-[-28deg] rounded-full bg-white/75"></span>
-                            </div>
-                            <div class="absolute bottom-6 left-2 rounded-full border border-violet-300/30 bg-[#4c1d95]/30 px-4 py-2 text-sm font-semibold text-violet-50 shadow-xl shadow-[#4c1d95]/30">
-                                Queue. Play. Sing.
+                        <div class="relative mx-auto w-full max-w-md lg:max-w-none" data-reveal="right" aria-label="MyKaraoke preview video">
+                            <div class="absolute -inset-4 rounded-[2rem] bg-[#4c1d95]/30 blur-3xl"></div>
+                            <div class="relative overflow-hidden rounded-2xl border border-white/10 bg-black shadow-2xl shadow-[#4c1d95]/30">
+                                <video
+                                    class="aspect-[4/5] w-full object-cover sm:aspect-[5/6] lg:aspect-[4/5]"
+                                    src="{{ asset('videos/yummy.mp4') }}"
+                                    autoplay
+                                    muted
+                                    loop
+                                    playsinline
+                                    preload="metadata"
+                                    aria-hidden="true"
+                                ></video>
+                                <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-[#4c1d95]/10"></div>
                             </div>
                         </div>
                     </div>

@@ -137,4 +137,33 @@
             transform: none;
         }
     }
+
+    @media (max-height: 520px) and (orientation: landscape) {
+        .karaoke-overlay-header {
+            padding-block: 0.5rem;
+        }
+
+        .karaoke-overlay-title {
+            font-size: 1.25rem;
+            line-height: 1.6rem;
+        }
+
+        .karaoke-overlay-subtitle {
+            display: none;
+        }
+
+        .karaoke-overlay-controls {
+            padding-block: 0.5rem;
+        }
+
+        .karaoke-overlay-button {
+            min-height: 2.5rem;
+            padding: 0.55rem 0.75rem;
+        }
+
+        .karaoke-overlay-artwork {
+            height: 2.75rem;
+            width: 2.75rem;
+        }
+    }
 }

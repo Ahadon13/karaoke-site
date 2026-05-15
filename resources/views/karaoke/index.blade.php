@@ -172,7 +172,6 @@
                     selectedVideo: null,
                     playerOverlayOpen: false,
                     playerQueueOpen: false,
-                    playerSettingsOpen: false,
                     playerCanceled: false,
                     loading: false,
                     suggestionLoading: false,
@@ -427,6 +426,11 @@
                         this.playerOverlayOpen = false;
                     },
 
+                    openPlayer() {
+                        this.playerOverlayOpen = true;
+                        this.playerQueueOpen = false;
+                    },
+
                     cancelPlayer() {
                         if (this.selectedVideo?.id) {
                             this.rememberCanceledQueueItem(this.selectedVideo);
@@ -435,7 +439,6 @@
                         this.selectedVideo = null;
                         this.playerOverlayOpen = false;
                         this.playerQueueOpen = false;
-                        this.playerSettingsOpen = false;
                         this.playerCanceled = true;
                         this.playerNonce += 1;
                         this.fullscreenStatus = 'Video canceled. Your queue is still saved for this session.';
@@ -471,12 +474,6 @@
 
                     togglePlayerQueue() {
                         this.playerQueueOpen = !this.playerQueueOpen;
-                        this.playerSettingsOpen = false;
-                    },
-
-                    togglePlayerSettings() {
-                        this.playerSettingsOpen = !this.playerSettingsOpen;
-                        this.playerQueueOpen = false;
                     },
 
                     restartSelectedVideo() {
@@ -653,7 +650,6 @@
                         this.playerOverlayOpen = true;
                         this.playerCanceled = false;
                         this.playerQueueOpen = false;
-                        this.playerSettingsOpen = false;
                         this.error = '';
                         this.savePlayHistory(video);
                     },
@@ -1194,8 +1190,8 @@
 
         <div x-data="karaokeRoom()" x-cloak class="relative z-10 min-h-screen">
             <header class="sticky top-0 z-[100] border-b border-white/10 bg-[#04150f]/95 backdrop-blur-2xl">
-                <nav class="mx-auto grid min-h-20 w-full max-w-[96rem] gap-3 px-4 py-3 md:grid-cols-[13rem_minmax(0,1fr)_auto] md:items-center sm:px-6 lg:px-8">
-                    <a href="{{ url('/') }}" class="text-2xl font-black tracking-tight text-white transition hover:text-violet-200">
+                <nav class="mx-auto grid min-h-20 w-full max-w-[96rem] gap-3 px-4 py-3 md:grid-cols-[13rem_minmax(0,1fr)] md:items-center sm:px-6 lg:px-8">
+                    <a href="{{ url('/') }}" class="hidden text-2xl font-black tracking-tight text-white transition hover:text-violet-200 md:block">
                         MyKaraoke
                     </a>
 
@@ -1222,7 +1218,7 @@
                                 maxlength="100"
                                 autocomplete="off"
                                 placeholder="Search songs, artists and playlists"
-                                class="min-h-12 w-full rounded-full border border-white/10 bg-white/[0.08] py-3 pl-12 pr-24 text-sm font-semibold text-white outline-none transition placeholder:text-neutral-400 focus:border-violet-300 focus:ring-2 focus:ring-violet-300/30"
+                                class="min-h-12 w-full rounded-full border border-white/10 bg-white/[0.08] py-3 pl-12 pr-20 text-sm font-semibold text-white outline-none transition placeholder:text-neutral-400 focus:border-violet-300 focus:ring-2 focus:ring-violet-300/30 sm:pr-24"
                             >
                             <button
                                 type="button"
@@ -1252,7 +1248,7 @@
                                     <span>Related songs</span>
                                     <button type="button" class="text-neutral-400 transition hover:text-white" x-on:click="clearSearch">Close</button>
                                 </div>
-                                <div class="grid max-h-[30rem] gap-3 overflow-y-auto p-3 sm:grid-cols-2 lg:grid-cols-3 [scrollbar-color:#4c1d95_transparent] [scrollbar-width:thin]">
+                                <div class="grid max-h-[min(30rem,calc(100dvh-9rem))] gap-3 overflow-y-auto p-3 sm:grid-cols-2 lg:grid-cols-3 [scrollbar-color:#4c1d95_transparent] [scrollbar-width:thin]">
                                     <template x-for="video in suggestions" x-bind:key="`suggestion-${video.video_id}`">
                                         <article class="group rounded-xl border border-white/10 bg-white/[0.04] p-2 transition duration-300 hover:-translate-y-1 hover:border-violet-300/50 hover:bg-[#4c1d95]/20">
                                             <button type="button" class="block w-full text-left" x-on:pointerdown.prevent.stop="chooseSuggestion(video)">
@@ -1284,11 +1280,6 @@
                             Queue selected
                         </button>
                     </form>
-
-                    <div class="flex items-center justify-end gap-3 text-sm">
-                        <button type="button" class="hidden rounded-full text-neutral-300 transition hover:text-white md:inline-flex" x-on:click="copyRoomLink">Room {{ $activeRoom->code }}</button>
-                        <button type="button" class="rounded-full bg-[#4c1d95] px-4 py-2 text-xs font-bold text-white shadow-lg shadow-[#4c1d95]/30 transition hover:-translate-y-0.5 hover:bg-[#5b21b6]" x-on:click="openPlayerFromHeader">Open player</button>
-                    </div>
                 </nav>
             </header>
 
@@ -1664,33 +1655,33 @@
                 </template>
                 <div class="absolute inset-0 bg-gradient-to-b from-[#4c1d95]/45 via-black/55 to-black"></div>
 
-                <div class="relative flex min-h-dvh flex-col">
-                    <div class="flex items-center justify-between gap-3 px-4 py-4 sm:px-8">
-                        <button type="button" class="inline-flex items-center gap-2 rounded-lg bg-white/10 px-4 py-3 text-sm font-bold text-white backdrop-blur transition hover:bg-white/15" x-on:click="minimizePlayer">
+                <div class="relative flex h-dvh min-h-0 flex-col overflow-hidden">
+                    <div class="karaoke-overlay-header flex shrink-0 items-center justify-between gap-3 px-3 py-3 sm:px-8 sm:py-4">
+                        <button type="button" class="inline-flex min-h-11 items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm font-bold text-white backdrop-blur transition hover:bg-white/15 sm:px-4 sm:py-3" x-on:click="minimizePlayer">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M5.22 7.22a.75.75 0 0 1 1.06 0L10 10.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 8.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
                             </svg>
-                            <span>Minimize</span>
+                            <span class="hidden sm:inline">Minimize</span>
                         </button>
-                        <div class="text-center">
-                            <p class="text-3xl font-black">MyKaraoke</p>
-                            <p class="mt-1 text-xs font-bold uppercase tracking-[0.22em] text-violet-100">Karaoke preview</p>
+                        <div class="hidden text-center md:block">
+                            <p class="karaoke-overlay-title text-3xl font-black">MyKaraoke</p>
+                            <p class="karaoke-overlay-subtitle mt-1 hidden text-xs font-bold uppercase tracking-[0.22em] text-violet-100 sm:block">Karaoke preview</p>
                         </div>
-                        <button type="button" class="inline-flex items-center gap-2 rounded-lg bg-white/10 px-4 py-3 text-sm font-bold text-white backdrop-blur transition hover:bg-white/15" x-on:click="fullscreenPlayer" x-bind:disabled="!selectedVideo" aria-label="Fullscreen player">
+                        <button type="button" class="inline-flex min-h-11 items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm font-bold text-white backdrop-blur transition hover:bg-white/15 sm:px-4 sm:py-3" x-on:click="fullscreenPlayer" x-bind:disabled="!selectedVideo" aria-label="Fullscreen player">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5" aria-hidden="true">
                                 <path d="M3.25 3A1.25 1.25 0 0 0 2 4.25v3a.75.75 0 0 0 1.5 0V4.5h2.75a.75.75 0 0 0 0-1.5h-3Zm10.5 0a.75.75 0 0 0 0 1.5h2.75v2.75a.75.75 0 0 0 1.5 0v-3A1.25 1.25 0 0 0 16.75 3h-3ZM3.5 12.75a.75.75 0 0 0-1.5 0v3A1.25 1.25 0 0 0 3.25 17h3a.75.75 0 0 0 0-1.5H3.5v-2.75Zm14.5 0a.75.75 0 0 0-1.5 0v2.75h-2.75a.75.75 0 0 0 0 1.5h3A1.25 1.25 0 0 0 18 15.75v-3Z" />
                             </svg>
 
-                            <span>Fullscreen</span>
+                            <span class="hidden sm:inline">Fullscreen</span>
                         </button>
                     </div>
 
-                    <div x-ref="playerSurface" class="relative min-h-[22rem] flex-1 overflow-hidden">
+                    <div x-ref="playerSurface" class="relative min-h-0 flex-1 overflow-hidden">
                         <div class="stage-noise absolute inset-0 opacity-50"></div>
                         <template x-if="selectedVideo">
                             <iframe class="absolute inset-0 h-full w-full" x-bind:src="playerUrl()" x-bind:title="selectedVideo.title" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
                         </template>
-                        <div x-show="!selectedVideo" class="relative z-10 flex h-full min-h-[22rem] items-center justify-center px-6 text-center">
+                        <div x-show="!selectedVideo" class="relative z-10 flex h-full min-h-0 items-center justify-center px-6 text-center">
                             <div>
                                 <p class="text-sm font-bold uppercase text-violet-200">Player canceled</p>
                                 <p class="mt-2 text-3xl font-black">Queue is still ready</p>
@@ -1699,10 +1690,10 @@
                         </div>
                     </div>
 
-                    <div class="border-t border-white/10 bg-[#202020]/95 shadow-2xl shadow-black">
-                        <div class="grid gap-4 px-4 py-4 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-center sm:px-8">
+                    <div class="shrink-0 border-t border-white/10 bg-[#202020]/95 shadow-2xl shadow-black">
+                        <div class="karaoke-overlay-controls grid gap-3 px-3 py-3 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-center sm:px-8 sm:py-4">
                             <div class="flex min-w-0 items-center gap-4">
-                                <div class="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-lg bg-[#4c1d95]/30">
+                                <div class="karaoke-overlay-artwork grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-lg bg-[#4c1d95]/30 sm:h-16 sm:w-16">
                                     <template x-if="selectedVideo && selectedVideo.thumbnail_url">
                                         <img x-bind:src="selectedVideo.thumbnail_url" x-bind:alt="selectedVideo.title" class="h-full w-full object-cover">
                                     </template>
@@ -1716,21 +1707,21 @@
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-3 gap-3 sm:flex sm:items-center">
-                                <button type="button" class="inline-flex items-center justify-center gap-2 rounded-lg bg-white/10 px-4 py-3 text-sm font-bold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50" x-on:click="restartSelectedVideo" x-bind:disabled="!selectedVideo">
+                            <div class="grid grid-cols-3 gap-2 sm:flex sm:items-center sm:gap-3">
+                                <button type="button" class="karaoke-overlay-button inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-xs font-bold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-3 sm:text-sm" x-on:click="restartSelectedVideo" x-bind:disabled="!selectedVideo">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5" aria-hidden="true">
                                         <path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 1 1-2.955-5.21.75.75 0 1 0 .686-1.333 7 7 0 1 0 3.758 6.635.75.75 0 1 0-1.489-.092Z" clip-rule="evenodd" />
                                         <path d="M14.75 3.75a.75.75 0 0 0-.75.75v3.25h-3.25a.75.75 0 0 0 0 1.5h4A.75.75 0 0 0 15.5 8.5v-4a.75.75 0 0 0-.75-.75Z" />
                                     </svg>
                                     <span>Start over</span>
                                 </button>
-                                <button type="button" class="inline-flex items-center justify-center gap-2 rounded-lg bg-white/10 px-4 py-3 text-sm font-bold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50" x-on:click="playNextQueuedSong" x-bind:disabled="!nextQueueItem()">
+                                <button type="button" class="karaoke-overlay-button inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-xs font-bold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-3 sm:text-sm" x-on:click="playNextQueuedSong" x-bind:disabled="!nextQueueItem()">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5" aria-hidden="true">
                                         <path d="M4.5 4.75a.75.75 0 0 1 1.18-.614l6.5 4.75a.75.75 0 0 1 0 1.228l-6.5 4.75A.75.75 0 0 1 4.5 14.25v-9.5ZM14.75 4a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-1.5 0V4.75a.75.75 0 0 1 .75-.75Z" />
                                     </svg>
                                     <span>Next</span>
                                 </button>
-                                <button type="button" class="inline-flex items-center justify-center gap-2 rounded-lg bg-white/10 px-4 py-3 text-sm font-bold text-white transition hover:bg-white/15" x-on:click="togglePlayerQueue">
+                                <button type="button" class="karaoke-overlay-button inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-xs font-bold text-white transition hover:bg-white/15 sm:px-4 sm:py-3 sm:text-sm" x-on:click="togglePlayerQueue">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5" aria-hidden="true">
                                         <path fill-rule="evenodd" d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75ZM2 10a.75.75 0 0 1 .75-.75h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2 10Zm.75 4.5a.75.75 0 0 0 0 1.5h14.5a.75.75 0 0 0 0-1.5H2.75Z" clip-rule="evenodd" />
                                     </svg>
@@ -1739,7 +1730,7 @@
                             </div>
 
                             <div class="flex sm:items-center">
-                                <button type="button" class="inline-flex items-center justify-center gap-2 rounded-lg bg-red-500/15 px-4 py-3 text-sm font-bold text-red-100 transition hover:bg-red-500/25" x-on:click="cancelPlayer">
+                                <button type="button" class="karaoke-overlay-button inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-red-500/15 px-3 py-2 text-xs font-bold text-red-100 transition hover:bg-red-500/25 sm:px-4 sm:py-3 sm:text-sm" x-on:click="cancelPlayer">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5" aria-hidden="true">
                                         <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
                                     </svg>
@@ -1757,9 +1748,9 @@
                 class="fixed inset-x-0 bottom-0 z-[160] border-t border-white/10 bg-[#202020]/95 text-white shadow-2xl shadow-black backdrop-blur"
                 aria-label="Mini karaoke player"
             >
-                <div class="mx-auto grid max-w-[96rem] gap-4 px-4 py-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center sm:px-6 lg:px-8">
+                <div class="mx-auto grid max-w-[96rem] gap-3 px-3 py-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center sm:px-6 lg:px-8">
                     <div class="flex min-w-0 items-center gap-3">
-                        <div class="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-lg bg-[#4c1d95]/30">
+                        <div class="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-lg bg-[#4c1d95]/30 sm:h-14 sm:w-14">
                             <template x-if="selectedVideo && selectedVideo.thumbnail_url">
                                 <img x-bind:src="selectedVideo.thumbnail_url" x-bind:alt="selectedVideo.title" class="h-full w-full object-cover">
                             </template>
@@ -1772,11 +1763,17 @@
                             <p class="mt-1 truncate text-sm text-neutral-400" x-text="selectedVideo ? selectedVideo.channel_title : (nextQueueItem() ? 'Ready for next queue song' : 'Queue is saved for this session.')"></p>
                         </div>
                     </div>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <button type="button" class="rounded-lg bg-white/10 px-3 py-2 text-xs font-bold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50" x-on:click="restartSelectedVideo" x-bind:disabled="!selectedVideo">Start over</button>
-                        <button type="button" class="rounded-lg bg-white/10 px-3 py-2 text-xs font-bold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50" x-on:click="playNextQueuedSong" x-bind:disabled="!nextQueueItem()">Next</button>
-                        <button type="button" class="rounded-lg bg-white/10 px-3 py-2 text-xs font-bold text-white transition hover:bg-white/15" x-on:click="togglePlayerQueue">Queue</button>
-                        <button type="button" class="rounded-lg bg-red-500/15 px-3 py-2 text-xs font-bold text-red-100 transition hover:bg-red-500/25" x-on:click="cancelPlayer" x-show="selectedVideo">Cancel video</button>
+                    <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+                        <button type="button" class="inline-flex items-center justify-center gap-1 rounded-lg bg-[#4c1d95] px-2 py-2 text-[11px] font-bold text-white shadow-lg shadow-[#4c1d95]/25 transition hover:bg-[#5b21b6] sm:px-3 sm:text-xs" x-on:click="openPlayer">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4" aria-hidden="true">
+                                <path d="M3.25 4A2.25 2.25 0 0 0 1 6.25v7.5A2.25 2.25 0 0 0 3.25 16h13.5A2.25 2.25 0 0 0 19 13.75v-7.5A2.25 2.25 0 0 0 16.75 4H3.25Zm4.47 3.22a.75.75 0 0 1 .78-.06l4.5 2.25a.75.75 0 0 1 0 1.34L8.5 13a.75.75 0 0 1-1.085-.67V7.89a.75.75 0 0 1 .305-.67Z" />
+                            </svg>
+                            <span>Open player</span>
+                        </button>
+                        <button type="button" class="rounded-lg bg-white/10 px-2 py-2 text-[11px] font-bold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3 sm:text-xs" x-on:click="restartSelectedVideo" x-bind:disabled="!selectedVideo">Start over</button>
+                        <button type="button" class="rounded-lg bg-white/10 px-2 py-2 text-[11px] font-bold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3 sm:text-xs" x-on:click="playNextQueuedSong" x-bind:disabled="!nextQueueItem()">Next</button>
+                        <button type="button" class="rounded-lg bg-white/10 px-2 py-2 text-[11px] font-bold text-white transition hover:bg-white/15 sm:px-3 sm:text-xs" x-on:click="togglePlayerQueue">Queue</button>
+                        <button type="button" class="rounded-lg bg-red-500/15 px-2 py-2 text-[11px] font-bold text-red-100 transition hover:bg-red-500/25 sm:px-3 sm:text-xs" x-on:click="cancelPlayer" x-show="selectedVideo">Cancel</button>
                     </div>
                 </div>
             </section>
@@ -1784,7 +1781,7 @@
             <aside
                 x-show="playerQueueOpen"
                 x-transition
-                class="fixed inset-y-0 right-0 z-[190] w-full max-w-md overflow-y-auto border-l border-white/10 bg-[#101014] p-5 text-white shadow-2xl shadow-black sm:p-6 [scrollbar-color:#4c1d95_transparent] [scrollbar-width:thin]"
+                class="fixed inset-y-0 right-0 z-[190] w-full overflow-y-auto border-l border-white/10 bg-[#101014] p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] text-white shadow-2xl shadow-black sm:max-w-md sm:p-6 [scrollbar-color:#4c1d95_transparent] [scrollbar-width:thin]"
                 aria-label="Player side panel"
             >
                 <div class="flex items-center justify-between gap-3">

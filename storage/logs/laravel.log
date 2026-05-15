@@ -580,3 +580,9 @@
 #11 C:/laragon/www/karaoke-site/artisan(16): Illuminate/Foundation/Application->handleCommand(Object(Symfony/Component/Console/Input/ArgvInput))
 #12 {main}
 "} 
+[2026-05-15 17:55:01] local.ERROR: YouTube trending music API request failed. {"message":"HTTP request returned status code 403:
+{
+  \"error\": {
+    \"code\": 403,
+    \"message\": \"The provided API key has an IP address restriction. The originating IP a (truncated...)
+"} 
