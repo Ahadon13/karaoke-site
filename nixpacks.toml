@@ -1,5 +1,16 @@
+[variables]
+PHP_VERSION = "8.4"
+NODE_VERSION = "20"
+NIXPACKS_PHP_ROOT_DIR = "/app/public"
+NIXPACKS_PHP_FALLBACK_PATH = "/index.php"
+
 [phases.setup]
-nixPkgs = ["...", "php84Extensions.redis", "python311Packages.supervisor"]
+nixPkgs = [
+    "...",
+    "nodejs_20",
+    "php84Extensions.redis",
+    "python311Packages.supervisor"
+]
 nixLibs = ["php84Extensions.redis"]
 
 [phases.build]
@@ -11,37 +22,36 @@ cmds = [
     "mkdir -p /app/storage/logs /app/storage/framework/sessions /app/storage/framework/views /app/storage/framework/cache /app/bootstrap/cache",
     "npm ci",
     "npm run build",
+    "composer install --no-dev --optimize-autoloader",
+    "php artisan config:clear",
+    "php artisan route:clear",
+    "php artisan view:clear",
     "..."
 ]
 
 [start]
-cmd = '/assets/start.sh'
+cmd = "/assets/start.sh"
 
 [staticAssets]
 "start.sh" = '''
 #!/bin/bash
 
-# Fix Laravel storage permissions at runtime
 mkdir -p /app/storage/logs /app/storage/framework/sessions /app/storage/framework/views /app/storage/framework/cache /app/bootstrap/cache
+
 chown -R www-data:www-data /app/storage /app/bootstrap/cache
 chmod -R 775 /app/storage /app/bootstrap/cache
 
-# Create storage symlink if it doesn't exist
 if [ ! -L /app/public/storage ]; then
-    php /app/artisan storage:link
+    php /app/artisan storage:link || true
 fi
 
-# Ensure public storage is readable
-chown -R www-data:www-data /app/public/storage
-chmod -R 755 /app/storage/app/public
+chown -R www-data:www-data /app/public/storage || true
+chmod -R 755 /app/storage/app/public || true
 
-# Optimize Laravel with increased memory limit for CLI
 php -d memory_limit=512M /app/artisan optimize
 
-# Transform the nginx configuration
 node /assets/scripts/prestart.mjs /assets/nginx.template.conf /etc/nginx.conf
 
-# Start supervisor
 supervisord -c /etc/supervisord.conf -n
 '''
 
@@ -90,6 +100,34 @@ stdout_logfile=/var/log/worker-phpfpm.log
 stderr_logfile=/var/log/worker-phpfpm.log
 '''
 
+"worker-laravel.conf" = '''
+[program:worker-laravel-queue]
+process_name=%(program_name)s_%(process_num)02d
+command=bash -c 'exec php /app/artisan queue:work --sleep=3 --tries=3 --max-time=3600'
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+numprocs=1
+startsecs=0
+stopwaitsecs=3600
+stdout_logfile=/var/log/worker-laravel-queue.log
+stderr_logfile=/var/log/worker-laravel-queue.log
+
+[program:worker-laravel-scheduler]
+process_name=%(program_name)s_%(process_num)02d
+command=bash -c 'exec php /app/artisan schedule:work'
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+numprocs=1
+startsecs=0
+stopwaitsecs=3600
+stdout_logfile=/var/log/worker-laravel-scheduler.log
+stderr_logfile=/var/log/worker-laravel-scheduler.log
+'''
+
 "php-fpm.conf" = '''
 [www]
 listen = 127.0.0.1:9000
@@ -119,24 +157,26 @@ daemon off;
 worker_rlimit_nofile 8192;
 
 events {
-  worker_connections  4096;
+    worker_connections 4096;
 }
 
 http {
-    include    $!{nginx}/conf/mime.types;
-    index    index.html index.htm index.php;
+    include $!{nginx}/conf/mime.types;
+    index index.html index.htm index.php;
 
     default_type application/octet-stream;
-    log_format   main '$remote_addr - $remote_user [$time_local]  $status '
+
+    log_format main '$remote_addr - $remote_user [$time_local] $status '
         '"$request" $body_bytes_sent "$http_referer" '
         '"$http_user_agent" "$http_x_forwarded_for"';
+
     access_log /var/log/nginx-access.log;
     error_log /var/log/nginx-error.log;
-    sendfile     on;
-    tcp_nopush   on;
+
+    sendfile on;
+    tcp_nopush on;
     server_names_hash_bucket_size 128;
 
-    # Global client body size limit
     client_max_body_size 200M;
     client_body_timeout 300s;
     client_header_timeout 300s;
@@ -152,45 +192,20 @@ http {
         $if(NIXPACKS_PHP_ROOT_DIR) (
             root ${NIXPACKS_PHP_ROOT_DIR};
         ) else (
-            root /app;
+            root /app/public;
         )
 
         add_header X-Content-Type-Options "nosniff";
 
-        # Explicitly set for this server block
-        client_max_body_size 200M;
-        client_body_buffer_size 200M;
-        client_body_timeout 300s;
-
         index index.php;
         charset utf-8;
 
-        # WebSocket handling on /app path
-        location /app {
-            proxy_http_version 1.1;
-            proxy_set_header Host $http_host;
-            proxy_set_header Scheme $scheme;
-            proxy_set_header SERVER_PORT $server_port;
-            proxy_set_header REMOTE_ADDR $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "Upgrade";
-
-            # Increase proxy timeouts for websockets
-            proxy_read_timeout 3600s;
-            proxy_send_timeout 3600s;
-
-            proxy_pass http://127.0.0.1:8082;
-        }
-
-        # Fixed: Match all files under /build, not just the directory
         location ~ ^/build/ {
             add_header Access-Control-Allow-Origin "*" always;
             add_header Access-Control-Allow-Methods "GET, OPTIONS" always;
             add_header Access-Control-Allow-Headers "Origin, Content-Type, Accept" always;
             add_header Cross-Origin-Resource-Policy "cross-origin" always;
 
-            # Handle preflight requests
             if ($request_method = 'OPTIONS') {
                 return 204;
             }
@@ -198,25 +213,23 @@ http {
             try_files $uri =404;
         }
 
-        $if(NIXPACKS_PHP_FALLBACK_PATH) (
-            location / {
-                try_files $uri $uri/ ${NIXPACKS_PHP_FALLBACK_PATH}?$query_string;
-            }
-        ) else (
-          location / {
-                try_files $uri $uri/ /index.php?$query_string;
-           }
-        )
+        location / {
+            try_files $uri $uri/ /index.php?$query_string;
+        }
 
-        location = /favicon.ico { access_log off; log_not_found off; }
-        location = /robots.txt  { access_log off; log_not_found off; }
+        location = /favicon.ico {
+            access_log off;
+            log_not_found off;
+        }
 
-        $if(IS_LARAVEL) (
-            error_page 404 /index.php;
-        ) else ()
+        location = /robots.txt {
+            access_log off;
+            log_not_found off;
+        }
+
+        error_page 404 /index.php;
 
         location ~ \.php$ {
-            # Ensure file upload limits are set here too
             client_max_body_size 200M;
 
             fastcgi_pass 127.0.0.1:9000;
@@ -224,10 +237,10 @@ http {
             fastcgi_param HTTPS $https if_not_empty;
             fastcgi_param HTTP_X_FORWARDED_PROTO $http_x_forwarded_proto;
 
-            # Increase timeouts for large uploads
             fastcgi_read_timeout 300s;
             fastcgi_send_timeout 300s;
             fastcgi_connect_timeout 300s;
+
             fastcgi_buffer_size 128k;
             fastcgi_buffers 256 16k;
             fastcgi_busy_buffers_size 256k;
