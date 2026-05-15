@@ -1,5 +1,5 @@
 [variables]
-PHP_VERSION = "8.4"
+PHP_VERSION = "8.3"
 NODE_VERSION = "20"
 NIXPACKS_PHP_ROOT_DIR = "/app/public"
 NIXPACKS_PHP_FALLBACK_PATH = "/index.php"
@@ -8,7 +8,8 @@ NIXPACKS_PHP_FALLBACK_PATH = "/index.php"
 nixPkgs = [
     "...",
     "nodejs_20",
-    "php84Extensions.redis",
+    "php83",
+    "php83Extensions.redis",
     "python311Packages.supervisor"
 ]
 nixLibs = ["php84Extensions.redis"]
