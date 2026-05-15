@@ -24,7 +24,6 @@ cmds = [
     "node -v",
     "npm -v",
     "npm ci --include=optional",
-    "npm run build",
     "composer install --no-dev --optimize-autoloader",
     "php artisan config:clear",
     "php artisan route:clear",
