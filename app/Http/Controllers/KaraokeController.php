@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\KaraokeCuratedSong;
 use App\Models\KaraokeFavorite;
 use App\Models\KaraokePlayHistory;
 use App\Models\KaraokeQueueItem;
 use App\Models\KaraokeRoom;
-use App\Models\KaraokeCuratedSong;
+use App\Models\KaraokeSong;
+use App\Services\KaraokeSongCatalog;
+use App\Services\KaraokeRoomManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,45 +18,62 @@ use Illuminate\View\View;
 
 class KaraokeController extends Controller
 {
-    private const DEFAULT_ROOM_CODE = 'MAINROOM';
-
-    public function index(Request $request): View
+    public function index(Request $request, KaraokeSongCatalog $songCatalog, KaraokeRoomManager $roomManager): View
     {
-        $room = $this->resolveRoom($request->query('room'));
+        $room = $roomManager->resolve($request->query('room'));
+        $feature = $request->query('feature', 'all');
+        $genre = $request->query('genre');
+
+        if (filled($genre)) {
+            try {
+                $songCatalog->ensureGenreSongs((string) $genre, 12);
+            } catch (\RuntimeException) {
+                // The cached catalog still renders when YouTube is unavailable.
+            }
+        }
+
+        $catalogSongs = $songCatalog->catalogQuery(
+            query: $request->query('q'),
+            feature: is_string($feature) ? $feature : 'all',
+            genre: is_string($genre) ? $genre : null,
+        )
+            ->limit(24)
+            ->get()
+            ->map->toVideoArray()
+            ->values()
+            ->all();
 
         return view('karaoke.index', [
             'activeRoom' => $room,
-            'queueItems' => KaraokeQueueItem::query()
-                ->where('karaoke_room_id', $room->id)
-                ->whereIn('status', [
-                    KaraokeQueueItem::STATUS_QUEUED,
-                    KaraokeQueueItem::STATUS_PLAYING,
-                ])
-                ->orderBy('position')
-                ->limit(24)
-                ->get(),
-            'scoreboardItems' => KaraokeQueueItem::query()
-                ->where('karaoke_room_id', $room->id)
-                ->where('status', KaraokeQueueItem::STATUS_DONE)
-                ->whereNotNull('score')
-                ->orderByDesc('finished_at')
-                ->limit(6)
-                ->get(),
+            'queueItems' => $roomManager->activeQueueItems($room),
+            'catalogVideos' => $catalogSongs,
+            'featureFilters' => KaraokeSongCatalog::FEATURE_FILTERS,
+            'genreFilters' => $songCatalog->topGenres(),
+            'activeFeature' => is_string($feature) ? $feature : 'all',
+            'activeGenre' => is_string($genre) ? $genre : null,
             'curatedVideos' => KaraokeCuratedSong::query()
                 ->where('is_active', true)
                 ->orderBy('sort_order')
                 ->orderByDesc('updated_at')
                 ->limit(8)
                 ->get(),
-            'trendingVideos' => KaraokePlayHistory::query()
+            'trendingVideos' => KaraokeSong::query()
                 ->orderByDesc('played_count')
-                ->orderByDesc('last_played_at')
+                ->orderByDesc('search_count')
+                ->orderByDesc('cached_at')
                 ->limit(8)
-                ->get(),
-            'recentVideos' => KaraokePlayHistory::query()
+                ->get()
+                ->map->toVideoArray()
+                ->values()
+                ->all(),
+            'recentVideos' => KaraokeSong::query()
                 ->orderByDesc('last_played_at')
+                ->orderByDesc('cached_at')
                 ->limit(8)
-                ->get(),
+                ->get()
+                ->map->toVideoArray()
+                ->values()
+                ->all(),
             'favoriteVideos' => KaraokeFavorite::query()
                 ->orderByDesc('favorited_at')
                 ->limit(12)
@@ -85,6 +105,13 @@ class KaraokeController extends Controller
 
         $history->played_count = $history->exists ? $history->played_count + 1 : 1;
         $history->save();
+
+        KaraokeSong::query()
+            ->where('video_id', $validated['video_id'])
+            ->update([
+                'played_count' => DB::raw('played_count + 1'),
+                'last_played_at' => now(),
+            ]);
 
         return response()->json([
             'success' => true,
@@ -145,7 +172,7 @@ class KaraokeController extends Controller
             'searched_keyword' => ['nullable', 'string', 'max:100'],
         ]);
 
-        $room = $this->resolveRoom($validated['room_code'] ?? null);
+        $room = app(KaraokeRoomManager::class)->resolve($validated['room_code'] ?? null);
 
         $queueItem = DB::transaction(function () use ($room, $validated): KaraokeQueueItem {
             $nextPosition = ((int) KaraokeQueueItem::query()
@@ -225,21 +252,4 @@ class KaraokeController extends Controller
         ]);
     }
 
-    private function resolveRoom(?string $roomCode = null): KaraokeRoom
-    {
-        $code = strtoupper(preg_replace('/[^A-Za-z0-9_-]/', '', $roomCode ?: self::DEFAULT_ROOM_CODE) ?: self::DEFAULT_ROOM_CODE);
-        $code = substr($code, 0, 16) ?: self::DEFAULT_ROOM_CODE;
-
-        $room = KaraokeRoom::firstOrCreate(
-            ['code' => $code],
-            [
-                'name' => $code === self::DEFAULT_ROOM_CODE ? 'Main Room' : null,
-                'last_active_at' => now(),
-            ],
-        );
-
-        $room->forceFill(['last_active_at' => now()])->save();
-
-        return $room;
-    }
 }

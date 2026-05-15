@@ -3,9 +3,19 @@
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\KaraokeController;
 use App\Http\Controllers\SongSearchController;
+use App\Http\Controllers\SongCatalogController;
+use App\Http\Controllers\ArtistController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
+
+Route::get('/songs', [SongCatalogController::class, 'index'])->name('songs.index');
+Route::get('/songs/{videoId}', [SongCatalogController::class, 'show'])
+    ->where('videoId', '[A-Za-z0-9_-]+')
+    ->name('songs.show');
+Route::get('/artists/{artistName}', [ArtistController::class, 'show'])
+    ->where('artistName', '[A-Za-z0-9%._ -]+')
+    ->name('artists.show');
 
 Route::get('/karaoke', [KaraokeController::class, 'index'])->name('karaoke.index');
 Route::get('/karaoke/search', SongSearchController::class)

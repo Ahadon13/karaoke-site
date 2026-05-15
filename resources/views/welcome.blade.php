@@ -13,19 +13,59 @@
                 display: none !important;
             }
 
-            .stage-scene {
+            .home-shell {
                 background:
-                    linear-gradient(180deg, rgba(7, 4, 16, 0.14), rgba(7, 4, 16, 0.92)),
-                    linear-gradient(105deg, rgba(76, 29, 149, 0.96), rgba(14, 116, 144, 0.48) 48%, rgba(9, 6, 15, 0.98) 76%),
-                    #09060f;
+                    radial-gradient(circle at 14% 8%, rgba(76, 29, 149, 0.42), transparent 28rem),
+                    radial-gradient(circle at 88% 18%, rgba(34, 211, 238, 0.16), transparent 22rem),
+                    #030305;
             }
 
-            .stage-beam {
-                clip-path: polygon(46% 0, 58% 0, 100% 100%, 0 100%);
+            .hero-orbit {
+                background:
+                    radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.18), transparent 0.5rem),
+                    radial-gradient(circle at 68% 72%, rgba(255, 255, 255, 0.18), transparent 0.55rem),
+                    linear-gradient(145deg, #6d28d9, #4c1d95 58%, #2e1065);
+                border-radius: 46% 54% 56% 44% / 38% 44% 56% 62%;
+                filter: drop-shadow(0 2rem 3rem rgba(76, 29, 149, 0.45));
+                animation: hero-float 6s ease-in-out infinite alternate;
+            }
+
+            .hero-mouth {
+                background: #030305;
+                border-radius: 50% 50% 46% 46% / 58% 58% 42% 42%;
+                transform: rotate(8deg);
+            }
+
+            .hero-tongue {
+                background: linear-gradient(145deg, #f87171, #ef4444);
+                border-radius: 58% 42% 52% 48% / 48% 45% 55% 52%;
+            }
+
+            .dot-curtain {
+                background-image: radial-gradient(circle, rgba(34, 211, 238, 0.82) 0 0.18rem, transparent 0.2rem);
+                background-size: 1rem 1rem;
+                mask-image: linear-gradient(90deg, transparent, #000 20%, #000 82%, transparent);
+            }
+
+            .feature-glow {
+                background:
+                    radial-gradient(circle at 20% 20%, rgba(76, 29, 149, 0.34), transparent 16rem),
+                    radial-gradient(circle at 84% 64%, rgba(34, 211, 238, 0.14), transparent 14rem),
+                    rgba(255, 255, 255, 0.035);
             }
 
             .lyric-ticker {
-                animation: lyric-scroll 22s linear infinite;
+                animation: lyric-scroll 24s linear infinite;
+            }
+
+            @keyframes hero-float {
+                from {
+                    transform: translateY(0) rotate(-4deg);
+                }
+
+                to {
+                    transform: translateY(-1rem) rotate(4deg);
+                }
             }
 
             @keyframes lyric-scroll {
@@ -58,11 +98,21 @@
                             return '';
                         }
 
-                        return `https://www.youtube.com/embed/${this.selectedVideo.video_id}?autoplay=1&rel=0`;
+                        const params = new URLSearchParams({
+                            autoplay: '1',
+                            rel: '0',
+                            playsinline: '1',
+                            origin: window.location.origin,
+                        });
+
+                        return `https://www.youtube.com/embed/${this.selectedVideo.video_id}?${params.toString()}`;
                     },
 
                     playFeaturedSong(video) {
                         this.selectedVideo = video;
+                        window.dispatchEvent(new CustomEvent('mykaraoke:play', {
+                            detail: { video },
+                        }));
                         this.$nextTick(() => {
                             document.getElementById('featured-player')?.scrollIntoView({
                                 behavior: 'smooth',
@@ -78,34 +128,33 @@
             };
         </script>
     </head>
-    <body class="bg-[#09060f] text-white antialiased">
+    <body class="home-shell min-h-screen overflow-x-hidden text-white antialiased">
         <div class="music-note-field" aria-hidden="true">
             <span class="music-note" style="--note-left: 8%; --note-size: 1.7rem; --note-duration: 19s; --note-delay: -2s; --note-drift: 3rem;">&#9834;</span>
             <span class="music-note" style="--note-left: 18%; --note-size: 2.4rem; --note-duration: 24s; --note-delay: -10s; --note-drift: -2rem;">&#9835;</span>
-            <span class="music-note" style="--note-left: 29%; --note-size: 1.9rem; --note-duration: 21s; --note-delay: -5s; --note-drift: 2.5rem;">&#9834;</span>
-            <span class="music-note" style="--note-left: 43%; --note-size: 2.8rem; --note-duration: 27s; --note-delay: -15s; --note-drift: -3.5rem;">&#9835;</span>
-            <span class="music-note" style="--note-left: 57%; --note-size: 1.6rem; --note-duration: 18s; --note-delay: -7s; --note-drift: 2rem;">&#9834;</span>
-            <span class="music-note" style="--note-left: 70%; --note-size: 2.2rem; --note-duration: 23s; --note-delay: -12s; --note-drift: -2.5rem;">&#9835;</span>
-            <span class="music-note" style="--note-left: 83%; --note-size: 1.8rem; --note-duration: 20s; --note-delay: -4s; --note-drift: 3rem;">&#9834;</span>
-            <span class="music-note" style="--note-left: 94%; --note-size: 2.5rem; --note-duration: 26s; --note-delay: -18s; --note-drift: -3rem;">&#9835;</span>
+            <span class="music-note" style="--note-left: 31%; --note-size: 1.9rem; --note-duration: 21s; --note-delay: -5s; --note-drift: 2.5rem;">&#9834;</span>
+            <span class="music-note" style="--note-left: 47%; --note-size: 2.8rem; --note-duration: 27s; --note-delay: -15s; --note-drift: -3.5rem;">&#9835;</span>
+            <span class="music-note" style="--note-left: 63%; --note-size: 1.6rem; --note-duration: 18s; --note-delay: -7s; --note-drift: 2rem;">&#9834;</span>
+            <span class="music-note" style="--note-left: 78%; --note-size: 2.2rem; --note-duration: 23s; --note-delay: -12s; --note-drift: -2.5rem;">&#9835;</span>
+            <span class="music-note" style="--note-left: 92%; --note-size: 1.8rem; --note-duration: 20s; --note-delay: -4s; --note-drift: 3rem;">&#9834;</span>
         </div>
 
         <div x-data="myKaraokeHome()" x-cloak class="relative z-10">
-            <header class="fixed inset-x-0 top-0 z-30 border-b border-white/10 bg-[#09060f]/80 backdrop-blur-xl">
+            <header class="fixed inset-x-0 top-0 z-40 border-b border-white/10 bg-black/70 backdrop-blur-xl">
                 <nav class="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-                    <a href="{{ url('/') }}" class="text-base font-semibold transition hover:text-violet-200">
+                    <a href="{{ url('/') }}" class="text-lg font-black tracking-tight text-white transition hover:text-violet-200">
                         MyKaraoke
                     </a>
 
-                    <div class="hidden items-center gap-8 text-sm text-neutral-300 md:flex">
-                        <a href="#featured" class="transition hover:text-white">Trending</a>
-                        <a href="#easy" class="transition hover:text-white">Easy singing</a>
-                        <a href="{{ route('karaoke.index') }}" class="transition hover:text-white">Karaoke room</a>
+                    <div class="hidden items-center gap-8 text-xs font-semibold text-neutral-300 md:flex">
+                        <a href="#featured" class="transition hover:text-white">Songs</a>
+                        <a href="#anywhere" class="transition hover:text-white">How it works</a>
+                        <a href="#features" class="transition hover:text-white">Features</a>
                     </div>
 
                     <a
                         href="{{ route('karaoke.index') }}"
-                        class="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-[#271047] transition hover:-translate-y-0.5 hover:bg-violet-100"
+                        class="rounded-md bg-[#4c1d95] px-4 py-2 text-sm font-bold text-white shadow-lg shadow-[#4c1d95]/35 transition hover:-translate-y-0.5 hover:bg-[#5b21b6]"
                     >
                         Open room
                     </a>
@@ -113,71 +162,80 @@
             </header>
 
             <main>
-                <section class="stage-scene relative flex min-h-[88vh] overflow-hidden border-b border-white/10 pt-16">
-                    <div class="pointer-events-none absolute inset-0 opacity-80">
-                        <div class="stage-beam absolute -top-8 left-[5%] h-[72%] w-[22rem] rotate-[-18deg] bg-white/10 blur-sm"></div>
-                        <div class="stage-beam absolute -top-12 right-[12%] h-[76%] w-[24rem] rotate-[21deg] bg-cyan-300/10 blur-sm"></div>
-                        <div class="absolute left-0 right-0 top-20 h-px bg-white/20"></div>
-                        <div class="absolute bottom-0 left-0 right-0 h-[34%] bg-[linear-gradient(180deg,rgba(8,8,13,0),rgba(7,7,10,0.94)_48%,#050508)]"></div>
-                        <div class="absolute bottom-[16%] left-0 right-0 h-px bg-white/15"></div>
-                        <div class="absolute bottom-[9%] left-0 right-0 grid grid-cols-12 gap-2 px-5 opacity-45">
-                            @for ($index = 0; $index < 12; $index++)
-                                <span class="h-px bg-white/40"></span>
-                            @endfor
-                        </div>
-                    </div>
+                <section class="relative min-h-[92vh] overflow-hidden border-b border-white/10 pt-16">
+                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(76,29,149,0.36),transparent_26rem)]"></div>
+                    <div class="absolute -left-24 top-12 h-[28rem] w-[34rem] rounded-[45%] bg-white/[0.06] blur-2xl"></div>
+                    <div class="dot-curtain absolute right-0 top-32 hidden h-72 w-64 opacity-80 lg:block"></div>
 
-                    <div class="relative z-10 mx-auto flex w-full max-w-7xl items-center px-4 py-20 sm:px-6 lg:px-8">
-                        <div class="max-w-3xl" data-reveal="left">
-                            <p class="mb-5 inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-violet-100 backdrop-blur">
-                                Sing faster with less searching
+                    <div class="relative mx-auto grid min-h-[calc(92vh-4rem)] w-full max-w-7xl items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[minmax(0,1fr)_28rem] lg:px-8">
+                        <div data-reveal="left">
+                            <p class="mb-5 inline-flex rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-violet-100">
+                                Karaoke without the search hassle
                             </p>
-                            <h1 class="text-5xl font-black leading-tight sm:text-6xl lg:text-7xl">MyKaraoke</h1>
-                            <p class="mt-6 max-w-2xl text-lg leading-8 text-violet-50/85 sm:text-xl">
-                                Find songs quickly, play music instantly, and open a karaoke version without digging through endless search results.
+                            <h1 class="max-w-3xl text-5xl font-black leading-tight sm:text-6xl lg:text-7xl">
+                                Sing your favorite karaoke songs on any device
+                            </h1>
+                            <p class="mt-6 max-w-2xl text-base leading-8 text-neutral-300 sm:text-lg">
+                                MyKaraoke helps you find songs, preview music, queue singers, and jump into an official YouTube karaoke player with less tapping.
                             </p>
                             <div class="mt-8 flex flex-col gap-3 sm:flex-row">
                                 <a
-                                    href="#featured"
-                                    class="rounded-lg bg-[#4c1d95] px-6 py-4 text-center font-semibold text-white shadow-xl shadow-[#4c1d95]/35 transition hover:-translate-y-0.5 hover:bg-[#5b21b6] focus:outline-none focus:ring-2 focus:ring-violet-200"
+                                    href="{{ route('karaoke.index') }}"
+                                    class="rounded-md bg-[#4c1d95] px-6 py-4 text-center text-sm font-bold text-white shadow-xl shadow-[#4c1d95]/35 transition hover:-translate-y-0.5 hover:bg-[#5b21b6]"
                                 >
-                                    Browse trending songs
+                                    Start singing
                                 </a>
                                 <a
-                                    href="{{ route('karaoke.index') }}"
-                                    class="rounded-lg border border-white/15 bg-white/10 px-6 py-4 text-center font-semibold text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/15"
+                                    href="#featured"
+                                    class="rounded-md border border-white/15 bg-white/[0.06] px-6 py-4 text-center text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-white/10"
                                 >
-                                    Start karaoke
+                                    Browse songs
                                 </a>
+                            </div>
+                        </div>
+
+                        <div class="relative min-h-[22rem]" data-reveal="right" aria-hidden="true">
+                            <div class="hero-orbit absolute right-4 top-4 h-72 w-64 sm:h-80 sm:w-72">
+                                <div class="hero-mouth absolute left-[22%] top-[24%] h-[48%] w-[62%] overflow-hidden">
+                                    <div class="hero-tongue absolute bottom-0 left-[18%] h-[42%] w-[72%]"></div>
+                                </div>
+                                <span class="absolute left-10 top-8 h-4 w-16 rotate-[-28deg] rounded-full bg-white/75"></span>
+                                <span class="absolute bottom-8 right-8 h-4 w-14 rotate-[-28deg] rounded-full bg-white/75"></span>
+                            </div>
+                            <div class="absolute bottom-6 left-2 rounded-full border border-violet-300/30 bg-[#4c1d95]/30 px-4 py-2 text-sm font-semibold text-violet-50 shadow-xl shadow-[#4c1d95]/30">
+                                Queue. Play. Sing.
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <section id="featured" class="overflow-hidden bg-[#09060f] px-4 py-16 sm:px-6 lg:px-8">
+                <section id="featured" class="bg-[#07070a] px-4 py-16 sm:px-6 lg:px-8">
                     <div class="mx-auto max-w-7xl">
-                        <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between" data-reveal>
-                            <div>
-                                <p class="text-sm font-semibold text-cyan-300">Ready to play</p>
-                                <h2 class="mt-3 text-3xl font-bold sm:text-4xl">Trending songs right now</h2>
+                        <div class="text-center" data-reveal>
+                            <p class="text-sm font-bold text-violet-300">Give it a spin</p>
+                            <h2 class="mt-3 text-3xl font-black sm:text-5xl">Search, select, and play</h2>
+                            <div class="mx-auto mt-6 flex max-w-xl items-center gap-3 rounded-full border border-white/10 bg-white/[0.06] px-5 py-3 text-left text-sm text-neutral-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 text-violet-200" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 3.473 9.765l2.631 2.631a.75.75 0 1 0 1.06-1.06l-2.63-2.632A5.5 5.5 0 0 0 9 3.5Zm-4 5.5a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" clip-rule="evenodd" />
+                                </svg>
+                                <span>Pick a trending song below or open the karaoke room to search.</span>
                             </div>
-                            <a href="{{ route('karaoke.index') }}" class="text-sm font-semibold text-violet-200 transition hover:text-white">Open karaoke room</a>
                         </div>
 
-                        <div class="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_390px]">
-                            <div>
+                        <div class="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_28rem]">
+                            <div class="min-w-0">
                                 <div
-                                    class="flex gap-5 overflow-x-auto overflow-y-hidden pb-5 [scrollbar-color:#4c1d95_transparent] [scrollbar-width:thin]"
+                                    class="flex gap-5 overflow-x-auto overflow-y-hidden py-5 [scrollbar-color:#4c1d95_transparent] [scrollbar-width:thin]"
                                     x-show="featuredSongs.length > 0"
                                 >
                                     <template x-for="(song, index) in featuredSongs" x-bind:key="song.video_id">
                                         <article
-                                            class="group w-[13.5rem] shrink-0 rounded-lg bg-white/[0.045] p-4 transition duration-300 hover:-translate-y-2 hover:bg-white/[0.09] hover:shadow-2xl hover:shadow-[#4c1d95]/25"
+                                            class="group w-[13.5rem] shrink-0 rounded-md border border-white/10 bg-white/[0.05] p-3 transition duration-300 hover:-translate-y-2 hover:border-violet-300/40 hover:bg-white/[0.09] hover:shadow-2xl hover:shadow-[#4c1d95]/25"
                                             data-reveal
-                                            x-bind:style="`transition-delay: ${index * 70}ms`"
+                                            x-bind:style="`transition-delay: ${index * 65}ms`"
                                         >
                                             <button type="button" class="block w-full text-left" x-on:click="playFeaturedSong(song)">
-                                                <div class="relative aspect-square overflow-hidden rounded-lg bg-[#130827] shadow-xl shadow-black/35">
+                                                <div class="relative aspect-square overflow-hidden rounded-md bg-[#130827] shadow-xl shadow-black/35">
                                                     <img
                                                         x-show="song.thumbnail_url"
                                                         x-bind:src="song.thumbnail_url"
@@ -185,9 +243,9 @@
                                                         class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                                                     >
                                                     <div class="absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(0,0,0,0.78))]"></div>
-                                                    <span class="absolute bottom-4 right-4 grid h-12 w-12 translate-y-3 place-items-center rounded-full bg-[#4c1d95] text-white opacity-0 shadow-lg shadow-black/30 transition group-hover:translate-y-0 group-hover:opacity-100">
-                                                        <span class="sr-only">Play</span>
-                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6" aria-hidden="true">
+                                                    <span class="absolute bottom-3 right-3 grid h-11 w-11 translate-y-3 place-items-center rounded-full bg-[#4c1d95] text-white opacity-0 shadow-lg shadow-black/30 transition group-hover:translate-y-0 group-hover:opacity-100">
+                                                        <span class="sr-only">Play on homepage</span>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5" aria-hidden="true">
                                                             <path d="M6.3 2.841A1.5 1.5 0 0 0 4 4.11v11.78a1.5 1.5 0 0 0 2.3 1.269l9.344-5.89a1.5 1.5 0 0 0 0-2.538L6.3 2.84Z" />
                                                         </svg>
                                                     </span>
@@ -196,105 +254,157 @@
                                                 <p class="mt-1 truncate text-sm text-neutral-400" x-text="song.channel_title"></p>
                                             </button>
                                             <a
-                                                class="mt-3 inline-flex rounded-md border border-white/10 px-3 py-2 text-xs font-semibold text-violet-100 transition hover:border-violet-200 hover:bg-[#4c1d95]/40"
+                                                class="mt-3 inline-flex rounded-md border border-white/10 px-3 py-2 text-xs font-bold text-violet-100 transition hover:border-violet-200 hover:bg-[#4c1d95]/40"
                                                 x-bind:href="karaokeSearchUrl(song)"
                                             >
-                                                Find karaoke version
+                                                Find karaoke
                                             </a>
                                         </article>
                                     </template>
                                 </div>
 
                                 <div
-                                    class="rounded-lg border border-dashed border-violet-300/25 bg-[#4c1d95]/10 p-6 text-sm text-violet-100/75"
+                                    class="rounded-md border border-dashed border-violet-300/25 bg-[#4c1d95]/10 p-6 text-sm text-violet-100/75"
                                     x-show="featuredSongs.length === 0"
                                 >
-                                    <p class="font-semibold">Trending songs are not available yet.</p>
+                                    <p class="font-bold">Trending songs are not available yet.</p>
                                     <p class="mt-2" x-text="featuredError || 'Open the karaoke room and search for any song you want to sing.'"></p>
                                 </div>
+
+                                <a
+                                    href="{{ route('karaoke.index') }}"
+                                    class="mt-6 inline-flex rounded-md bg-[#4c1d95] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-[#4c1d95]/30 transition hover:-translate-y-0.5 hover:bg-[#5b21b6]"
+                                >
+                                    Explore the catalog
+                                </a>
                             </div>
 
-                            <aside id="featured-player" class="rounded-lg border border-white/10 bg-white/[0.045] p-4 shadow-2xl shadow-black/30" data-reveal="right">
-                                <div class="mb-3 flex items-center justify-between gap-3">
-                                    <div>
-                                        <p class="text-sm font-semibold text-violet-200">Now playing</p>
-                                        <h3 class="mt-1 text-xl font-bold" x-text="selectedVideo ? selectedVideo.title : 'Select a trending song'"></h3>
+                            <aside id="featured-player" class="rounded-md border border-white/10 bg-[#111114] p-4 shadow-2xl shadow-black/30" data-reveal="right">
+                                <div class="mb-4 flex items-center justify-between gap-3">
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-bold text-violet-200">Stage player</p>
+                                        <h3 class="mt-1 line-clamp-2 text-xl font-black" x-text="selectedVideo ? selectedVideo.title : 'Choose a song to open the player'"></h3>
                                     </div>
-                                    <span class="rounded-full bg-[#4c1d95]/70 px-3 py-1 text-xs font-semibold">Music mode</span>
+                                    <span class="shrink-0 rounded-full bg-[#4c1d95]/70 px-3 py-1 text-xs font-bold">Overlay</span>
                                 </div>
 
-                                <div class="aspect-video overflow-hidden rounded-lg border border-white/10 bg-black">
-                                    <template x-if="selectedVideo">
-                                        <iframe
-                                            class="h-full w-full"
-                                            x-bind:src="playerUrl()"
-                                            x-bind:title="selectedVideo.title"
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                            allowfullscreen
-                                        ></iframe>
-                                    </template>
-                                    <div x-show="!selectedVideo" class="flex h-full items-center justify-center px-5 text-center text-sm text-neutral-400">
-                                        Choose a trending song to play here.
+                                <div class="aspect-video overflow-hidden rounded-md border border-white/10 bg-black">
+                                    <div class="flex h-full items-center justify-center px-5 text-center text-sm text-neutral-400">
+                                        <div>
+                                            <div class="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-[#4c1d95] text-white">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6" aria-hidden="true">
+                                                    <path d="M6.3 2.841A1.5 1.5 0 0 0 4 4.11v11.78a1.5 1.5 0 0 0 2.3 1.269l9.344-5.89a1.5 1.5 0 0 0 0-2.538L6.3 2.84Z" />
+                                                </svg>
+                                            </div>
+                                            <p x-text="selectedVideo ? 'The song is playing in the stage overlay.' : 'Select a song card to open the stage player.'"></p>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <p class="mt-3 truncate text-sm text-neutral-400" x-show="selectedVideo" x-text="selectedVideo ? selectedVideo.channel_title : ''"></p>
-                                <a
+                                <button
+                                    type="button"
                                     x-show="selectedVideo"
-                                    x-bind:href="selectedVideo ? karaokeSearchUrl(selectedVideo) : '#'"
-                                    class="mt-4 inline-flex w-full justify-center rounded-lg bg-[#4c1d95] px-4 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#5b21b6]"
+                                    x-on:click="selectedVideo && playFeaturedSong(selectedVideo)"
+                                    class="mt-4 inline-flex w-full justify-center rounded-md bg-[#4c1d95] px-4 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-[#5b21b6]"
                                 >
-                                    Search karaoke version
-                                </a>
+                                    Reopen player
+                                </button>
                             </aside>
-                        </div>
-
-                        <div class="mt-4 overflow-hidden rounded-lg border border-white/10 bg-white/[0.04] py-3" data-reveal>
-                            <div class="lyric-ticker flex w-[200%] gap-8 whitespace-nowrap text-sm font-semibold text-violet-100/70">
-                                <span>Trending songs</span>
-                                <span>Play on the homepage</span>
-                                <span>Jump into karaoke</span>
-                                <span>Save favorites</span>
-                                <span>Rate your go-to songs</span>
-                                <span>Trending songs</span>
-                                <span>Play on the homepage</span>
-                                <span>Jump into karaoke</span>
-                                <span>Save favorites</span>
-                                <span>Rate your go-to songs</span>
-                            </div>
                         </div>
                     </div>
                 </section>
 
-                <section id="easy" class="bg-[#0d0817] px-4 py-16 sm:px-6 lg:px-8">
+                <section id="anywhere" class="border-y border-white/10 bg-black px-4 py-16 sm:px-6 lg:px-8">
                     <div class="mx-auto max-w-7xl">
-                        <div class="max-w-2xl" data-reveal>
-                            <p class="text-sm font-semibold text-cyan-300">No hassle</p>
-                            <h2 class="mt-3 text-3xl font-bold sm:text-4xl">Everything is built around getting to the song faster.</h2>
+                        <div data-reveal>
+                            <p class="text-sm font-bold text-violet-300">Sing karaoke anywhere</p>
+                            <h2 class="mt-3 max-w-2xl text-3xl font-black sm:text-5xl">From quick solo songs to a full room queue.</h2>
                         </div>
 
-                        <div class="mt-10 grid gap-4 md:grid-cols-3">
-                            <article class="rounded-lg border border-white/10 bg-white/[0.04] p-6 transition hover:-translate-y-1 hover:border-violet-300/50 hover:bg-white/[0.07]" data-reveal>
-                                <div class="mb-5 h-1.5 w-20 rounded-full bg-[#4c1d95]"></div>
-                                <h3 class="text-xl font-semibold">Pick a song fast</h3>
-                                <p class="mt-3 text-sm leading-6 text-neutral-400">Use trending songs as a shortcut or search directly when someone already knows what to sing.</p>
+                        <div class="mt-10 grid gap-6 md:grid-cols-3">
+                            <article class="rounded-md border border-white/10 bg-white/[0.04] p-6 transition hover:-translate-y-1 hover:border-violet-300/40 hover:bg-white/[0.07]" data-reveal>
+                                <div class="mb-5 grid h-11 w-11 place-items-center rounded-md bg-[#4c1d95]/30 text-violet-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5" aria-hidden="true">
+                                        <path d="M7 2.75A.75.75 0 0 1 7.75 2h4.5a.75.75 0 0 1 .75.75v14.5a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 7 17.25V2.75Z" />
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-bold">Sing on any device</h3>
+                                <p class="mt-3 text-sm leading-6 text-neutral-400">Search, play, and queue from a responsive web page built for desktop and mobile.</p>
                             </article>
 
-                            <article class="rounded-lg border border-white/10 bg-white/[0.04] p-6 transition hover:-translate-y-1 hover:border-cyan-300/50 hover:bg-white/[0.07]" data-reveal>
-                                <div class="mb-5 h-1.5 w-20 rounded-full bg-cyan-400"></div>
-                                <h3 class="text-xl font-semibold">Listen first</h3>
-                                <p class="mt-3 text-sm leading-6 text-neutral-400">Preview a song on the homepage before opening the karaoke version for the room.</p>
+                            <article class="rounded-md border border-white/10 bg-white/[0.04] p-6 transition hover:-translate-y-1 hover:border-cyan-300/40 hover:bg-white/[0.07]" data-reveal>
+                                <div class="mb-5 grid h-11 w-11 place-items-center rounded-md bg-cyan-400/15 text-cyan-200">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5" aria-hidden="true">
+                                        <path d="M18 3.75a.75.75 0 0 0-.9-.735l-10 2A.75.75 0 0 0 6.5 5.75v7.063A3.5 3.5 0 1 0 8 15.5V8.365l8.5-1.7v4.148A3.5 3.5 0 1 0 18 13.5V3.75Z" />
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-bold">Find songs faster</h3>
+                                <p class="mt-3 text-sm leading-6 text-neutral-400">Preview trending music, then launch a karaoke search with one click.</p>
                             </article>
 
-                            <article class="rounded-lg border border-white/10 bg-white/[0.04] p-6 transition hover:-translate-y-1 hover:border-fuchsia-300/50 hover:bg-white/[0.07]" data-reveal>
-                                <div class="mb-5 h-1.5 w-20 rounded-full bg-fuchsia-400"></div>
-                                <h3 class="text-xl font-semibold">Sing with less tapping</h3>
-                                <p class="mt-3 text-sm leading-6 text-neutral-400">Open the karaoke room with the song search already filled, then play and save your favorites.</p>
+                            <article class="rounded-md border border-white/10 bg-white/[0.04] p-6 transition hover:-translate-y-1 hover:border-fuchsia-300/40 hover:bg-white/[0.07]" data-reveal>
+                                <div class="mb-5 grid h-11 w-11 place-items-center rounded-md bg-fuchsia-400/15 text-fuchsia-200">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5" aria-hidden="true">
+                                        <path d="M10 3a5.5 5.5 0 0 0-5.5 5.5v1.275A2.5 2.5 0 0 0 5.25 14.5h.25A1.5 1.5 0 0 0 7 13V9.5A1.5 1.5 0 0 0 5.5 8h-.25a4.75 4.75 0 0 1 9.5 0h-.25A1.5 1.5 0 0 0 13 9.5V13a1.5 1.5 0 0 0 1.5 1.5h.25A2.5 2.5 0 0 0 15.5 9.775V8.5A5.5 5.5 0 0 0 10 3Z" />
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-bold">Run the rotation</h3>
+                                <p class="mt-3 text-sm leading-6 text-neutral-400">Queue singers, move to the next song, and keep the player focused on the stage.</p>
                             </article>
                         </div>
+                    </div>
+                </section>
+
+                <section id="features" class="bg-[#050507] px-4 py-16 sm:px-6 lg:px-8">
+                    <div class="mx-auto grid max-w-7xl gap-12 lg:grid-cols-2">
+                        <div class="feature-glow rounded-md border border-white/10 p-6 sm:p-8" data-reveal="left">
+                            <p class="text-sm font-bold text-violet-300">Original karaoke room</p>
+                            <h2 class="mt-3 text-3xl font-black sm:text-4xl">Search once, then keep the party moving.</h2>
+                            <p class="mt-4 text-sm leading-7 text-neutral-400">
+                                The karaoke room keeps search, microphone input, YouTube playback, favorites, and singer queue controls in one place.
+                            </p>
+                            <a
+                                href="{{ route('karaoke.index') }}"
+                                class="mt-6 inline-flex rounded-md bg-[#4c1d95] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-[#4c1d95]/30 transition hover:-translate-y-0.5 hover:bg-[#5b21b6]"
+                            >
+                                Open karaoke room
+                            </a>
+                        </div>
+
+                        <div class="grid gap-6" data-reveal="right">
+                            <article class="rounded-md border border-white/10 bg-white/[0.04] p-6">
+                                <p class="text-sm font-bold text-cyan-300">Music first</p>
+                                <h3 class="mt-2 text-2xl font-black">Play trending tracks before karaoke mode.</h3>
+                                <p class="mt-3 text-sm leading-6 text-neutral-400">Use the homepage player to listen first, then jump into a karaoke search when the room is ready.</p>
+                            </article>
+
+                            <article class="rounded-md border border-white/10 bg-white/[0.04] p-6">
+                                <p class="text-sm font-bold text-violet-300">Queue friendly</p>
+                                <h3 class="mt-2 text-2xl font-black">Built for shared singing sessions.</h3>
+                                <p class="mt-3 text-sm leading-6 text-neutral-400">Add songs from suggestions, favorites, and trending lists, then move through the queue with the player controls.</p>
+                            </article>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="overflow-hidden border-t border-white/10 bg-black py-4">
+                    <div class="lyric-ticker flex w-[200%] gap-8 whitespace-nowrap text-sm font-bold text-violet-100/70">
+                        <span>Trending songs</span>
+                        <span>Official YouTube player</span>
+                        <span>Karaoke queue</span>
+                        <span>Favorites</span>
+                        <span>Microphone meter</span>
+                        <span>Trending songs</span>
+                        <span>Official YouTube player</span>
+                        <span>Karaoke queue</span>
+                        <span>Favorites</span>
+                        <span>Microphone meter</span>
                     </div>
                 </section>
             </main>
+
+            @include('karaoke.partials.player', ['activeRoom' => $activeRoom, 'queueItems' => $queueItems])
         </div>
     </body>
 </html>

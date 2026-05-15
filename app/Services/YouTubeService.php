@@ -98,10 +98,10 @@ class YouTubeService
                 ->retry(2, 250)
                 ->get(self::VIDEOS_ENDPOINT, [
                     'key' => $apiKey,
-                    'part' => 'snippet,status',
+                    'part' => 'snippet,status,contentDetails,player',
                     'chart' => 'mostPopular',
                     'videoCategoryId' => '10',
-                    'maxResults' => $maxResults,
+                    'maxResults' => min(50, max($maxResults, 24)),
                     'regionCode' => config('services.youtube.region_code', 'PH'),
                 ]);
         } catch (Throwable $exception) {
@@ -122,7 +122,7 @@ class YouTubeService
         }
 
         return collect($response->json('items', []))
-            ->filter(fn (array $item): bool => data_get($item, 'status.embeddable') !== false)
+            ->filter(fn (array $item): bool => $this->isPlayableTrendingVideo($item))
             ->map(fn (array $item): array => [
                 'video_id' => (string) data_get($item, 'id', ''),
                 'title' => (string) data_get($item, 'snippet.title', ''),
@@ -133,8 +133,49 @@ class YouTubeService
                 'published_at' => data_get($item, 'snippet.publishedAt'),
             ])
             ->filter(fn (array $video): bool => filled($video['video_id']))
+            ->take($maxResults)
             ->values()
             ->all();
+    }
+
+    private function isPlayableTrendingVideo(array $item): bool
+    {
+        if (blank(data_get($item, 'id'))) {
+            return false;
+        }
+
+        if (data_get($item, 'status.embeddable') !== true) {
+            return false;
+        }
+
+        if (data_get($item, 'status.privacyStatus') !== 'public') {
+            return false;
+        }
+
+        if (data_get($item, 'status.uploadStatus') !== 'processed') {
+            return false;
+        }
+
+        if (blank(data_get($item, 'player.embedHtml'))) {
+            return false;
+        }
+
+        $region = strtoupper((string) config('services.youtube.region_code', 'PH'));
+        $blockedRegions = collect(data_get($item, 'contentDetails.regionRestriction.blocked', []))
+            ->map(fn (string $country): string => strtoupper($country));
+
+        if ($blockedRegions->contains($region)) {
+            return false;
+        }
+
+        $allowedRegions = collect(data_get($item, 'contentDetails.regionRestriction.allowed', []))
+            ->map(fn (string $country): string => strtoupper($country));
+
+        if ($allowedRegions->isNotEmpty() && ! $allowedRegions->contains($region)) {
+            return false;
+        }
+
+        return true;
     }
 
     private function queryWithSuffix(string $query): string

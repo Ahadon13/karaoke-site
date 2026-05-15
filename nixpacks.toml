@@ -1,0 +1,245 @@
+[phases.setup]
+nixPkgs = ["...", "php84Extensions.redis", "python311Packages.supervisor"]
+nixLibs = ["php84Extensions.redis"]
+
+[phases.build]
+cmds = [
+    "mkdir -p /etc/supervisor/conf.d/",
+    "cp /assets/worker-*.conf /etc/supervisor/conf.d/",
+    "cp /assets/supervisord.conf /etc/supervisord.conf",
+    "chmod +x /assets/start.sh",
+    "mkdir -p /app/storage/logs /app/storage/framework/sessions /app/storage/framework/views /app/storage/framework/cache /app/bootstrap/cache",
+    "npm ci",
+    "npm run build",
+    "..."
+]
+
+[start]
+cmd = '/assets/start.sh'
+
+[staticAssets]
+"start.sh" = '''
+#!/bin/bash
+
+# Fix Laravel storage permissions at runtime
+mkdir -p /app/storage/logs /app/storage/framework/sessions /app/storage/framework/views /app/storage/framework/cache /app/bootstrap/cache
+chown -R www-data:www-data /app/storage /app/bootstrap/cache
+chmod -R 775 /app/storage /app/bootstrap/cache
+
+# Create storage symlink if it doesn't exist
+if [ ! -L /app/public/storage ]; then
+    php /app/artisan storage:link
+fi
+
+# Ensure public storage is readable
+chown -R www-data:www-data /app/public/storage
+chmod -R 755 /app/storage/app/public
+
+# Optimize Laravel with increased memory limit for CLI
+php -d memory_limit=512M /app/artisan optimize
+
+# Transform the nginx configuration
+node /assets/scripts/prestart.mjs /assets/nginx.template.conf /etc/nginx.conf
+
+# Start supervisor
+supervisord -c /etc/supervisord.conf -n
+'''
+
+"supervisord.conf" = '''
+[unix_http_server]
+file=/assets/supervisor.sock
+
+[supervisord]
+logfile=/var/log/supervisord.log
+logfile_maxbytes=50MB
+logfile_backups=10
+loglevel=info
+pidfile=/assets/supervisord.pid
+nodaemon=false
+silent=false
+minfds=1024
+minprocs=200
+
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+
+[supervisorctl]
+serverurl=unix:///assets/supervisor.sock
+
+[include]
+files = /etc/supervisor/conf.d/*.conf
+'''
+
+"worker-nginx.conf" = '''
+[program:worker-nginx]
+process_name=%(program_name)s_%(process_num)02d
+command=nginx -c /etc/nginx.conf
+autostart=true
+autorestart=true
+stdout_logfile=/var/log/worker-nginx.log
+stderr_logfile=/var/log/worker-nginx.log
+'''
+
+"worker-phpfpm.conf" = '''
+[program:worker-phpfpm]
+process_name=%(program_name)s_%(process_num)02d
+command=php-fpm -y /assets/php-fpm.conf -F
+autostart=true
+autorestart=true
+stdout_logfile=/var/log/worker-phpfpm.log
+stderr_logfile=/var/log/worker-phpfpm.log
+'''
+
+"php-fpm.conf" = '''
+[www]
+listen = 127.0.0.1:9000
+user = www-data
+group = www-data
+listen.owner = www-data
+listen.group = www-data
+pm = dynamic
+pm.max_children = 50
+pm.min_spare_servers = 4
+pm.max_spare_servers = 32
+pm.start_servers = 18
+clear_env = no
+php_admin_value[post_max_size] = 300M
+php_admin_value[upload_max_filesize] = 300M
+php_admin_value[max_input_time] = 300
+php_admin_value[max_execution_time] = 300
+php_admin_value[extension] = redis.so
+php_admin_value[memory_limit] = 512M
+'''
+
+"nginx.template.conf" = '''
+user www-data www-data;
+worker_processes 5;
+daemon off;
+
+worker_rlimit_nofile 8192;
+
+events {
+  worker_connections  4096;
+}
+
+http {
+    include    $!{nginx}/conf/mime.types;
+    index    index.html index.htm index.php;
+
+    default_type application/octet-stream;
+    log_format   main '$remote_addr - $remote_user [$time_local]  $status '
+        '"$request" $body_bytes_sent "$http_referer" '
+        '"$http_user_agent" "$http_x_forwarded_for"';
+    access_log /var/log/nginx-access.log;
+    error_log /var/log/nginx-error.log;
+    sendfile     on;
+    tcp_nopush   on;
+    server_names_hash_bucket_size 128;
+
+    # Global client body size limit
+    client_max_body_size 200M;
+    client_body_timeout 300s;
+    client_header_timeout 300s;
+
+    server {
+        listen ${PORT};
+        listen [::]:${PORT};
+        server_name localhost;
+
+        real_ip_header X-Forwarded-For;
+        set_real_ip_from 0.0.0.0/0;
+
+        $if(NIXPACKS_PHP_ROOT_DIR) (
+            root ${NIXPACKS_PHP_ROOT_DIR};
+        ) else (
+            root /app;
+        )
+
+        add_header X-Content-Type-Options "nosniff";
+
+        # Explicitly set for this server block
+        client_max_body_size 200M;
+        client_body_buffer_size 200M;
+        client_body_timeout 300s;
+
+        index index.php;
+        charset utf-8;
+
+        # WebSocket handling on /app path
+        location /app {
+            proxy_http_version 1.1;
+            proxy_set_header Host $http_host;
+            proxy_set_header Scheme $scheme;
+            proxy_set_header SERVER_PORT $server_port;
+            proxy_set_header REMOTE_ADDR $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "Upgrade";
+
+            # Increase proxy timeouts for websockets
+            proxy_read_timeout 3600s;
+            proxy_send_timeout 3600s;
+
+            proxy_pass http://127.0.0.1:8082;
+        }
+
+        # Fixed: Match all files under /build, not just the directory
+        location ~ ^/build/ {
+            add_header Access-Control-Allow-Origin "*" always;
+            add_header Access-Control-Allow-Methods "GET, OPTIONS" always;
+            add_header Access-Control-Allow-Headers "Origin, Content-Type, Accept" always;
+            add_header Cross-Origin-Resource-Policy "cross-origin" always;
+
+            # Handle preflight requests
+            if ($request_method = 'OPTIONS') {
+                return 204;
+            }
+
+            try_files $uri =404;
+        }
+
+        $if(NIXPACKS_PHP_FALLBACK_PATH) (
+            location / {
+                try_files $uri $uri/ ${NIXPACKS_PHP_FALLBACK_PATH}?$query_string;
+            }
+        ) else (
+          location / {
+                try_files $uri $uri/ /index.php?$query_string;
+           }
+        )
+
+        location = /favicon.ico { access_log off; log_not_found off; }
+        location = /robots.txt  { access_log off; log_not_found off; }
+
+        $if(IS_LARAVEL) (
+            error_page 404 /index.php;
+        ) else ()
+
+        location ~ \.php$ {
+            # Ensure file upload limits are set here too
+            client_max_body_size 200M;
+
+            fastcgi_pass 127.0.0.1:9000;
+            fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+            fastcgi_param HTTPS $https if_not_empty;
+            fastcgi_param HTTP_X_FORWARDED_PROTO $http_x_forwarded_proto;
+
+            # Increase timeouts for large uploads
+            fastcgi_read_timeout 300s;
+            fastcgi_send_timeout 300s;
+            fastcgi_connect_timeout 300s;
+            fastcgi_buffer_size 128k;
+            fastcgi_buffers 256 16k;
+            fastcgi_busy_buffers_size 256k;
+            fastcgi_temp_file_write_size 256k;
+
+            include $!{nginx}/conf/fastcgi_params;
+            include $!{nginx}/conf/fastcgi.conf;
+        }
+
+        location ~ /\.(?!well-known).* {
+            deny all;
+        }
+    }
+}
+'''

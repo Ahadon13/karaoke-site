@@ -30,8 +30,16 @@ const initScrollReveal = () => {
     revealItems.forEach((item) => observer.observe(item));
 };
 
-document.addEventListener('DOMContentLoaded', initScrollReveal);
-
 window.Alpine = Alpine;
 
 Alpine.start();
+
+const bootScrollReveal = () => {
+    window.requestAnimationFrame(initScrollReveal);
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootScrollReveal);
+} else {
+    bootScrollReveal();
+}
