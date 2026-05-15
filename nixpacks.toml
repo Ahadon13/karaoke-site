@@ -7,7 +7,6 @@ NIXPACKS_PHP_FALLBACK_PATH = "/index.php"
 [phases.setup]
 nixPkgs = [
     "...",
-    "nodejs_20",
     "php84Extensions.redis",
     "python311Packages.supervisor"
 ]
