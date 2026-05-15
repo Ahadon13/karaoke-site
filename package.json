@@ -15,5 +15,8 @@
     },
     "dependencies": {
         "alpinejs": "^3.15.12"
+    },
+    "optionalDependencies": {
+        "@rolldown/binding-linux-x64-gnu": "*"
     }
 }
