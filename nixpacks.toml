@@ -1,17 +1,5 @@
-[variables]
-PHP_VERSION = "8.3"
-NODE_VERSION = "20"
-NIXPACKS_PHP_ROOT_DIR = "/app/public"
-NIXPACKS_PHP_FALLBACK_PATH = "/index.php"
-
 [phases.setup]
-nixPkgs = [
-    "...",
-    "nodejs_20",
-    "php83",
-    "php83Extensions.redis",
-    "python311Packages.supervisor"
-]
+nixPkgs = ["...", "php84Extensions.redis", "python311Packages.supervisor"]
 nixLibs = ["php84Extensions.redis"]
 
 [phases.build]
@@ -21,13 +9,8 @@ cmds = [
     "cp /assets/supervisord.conf /etc/supervisord.conf",
     "chmod +x /assets/start.sh",
     "mkdir -p /app/storage/logs /app/storage/framework/sessions /app/storage/framework/views /app/storage/framework/cache /app/bootstrap/cache",
-    "node -v",
-    "npm -v",
-    "npm ci --include=optional",
-    "composer install --no-dev --optimize-autoloader",
-    "php artisan config:clear",
-    "php artisan route:clear",
-    "php artisan view:clear",
+    "npm ci",
+    "npm run build",
     "..."
 ]
 
