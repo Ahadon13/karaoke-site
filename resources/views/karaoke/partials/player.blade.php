@@ -16,6 +16,7 @@
                 csrfToken: initialState.csrfToken,
                 playerNonce: 0,
                 canceledQueueItemIds: [],
+                playerChromeHidden: false,
 
                 init() {
                     this.loadCanceledQueueItems();
@@ -140,9 +141,37 @@
                     return this.sortedQueue().filter((item) => ['queued', 'playing'].includes(item.status));
                 },
 
+                activeQueuedSongs() {
+                    return this.sortedQueue().filter((item) => item.status === 'queued' && !this.isQueueItemCanceled(item));
+                },
+
                 nextQueueItem() {
-                    return this.sortedQueue()
-                        .filter((item) => item.status === 'queued' && !this.isQueueItemCanceled(item))[0] || null;
+                    return this.activeQueuedSongs()[0] || null;
+                },
+
+                playingQueueItem() {
+                    return this.queueItems.find((item) => item.status === 'playing') || null;
+                },
+
+                hasPlayerContent() {
+                    return Boolean(this.selectedVideo || this.playingQueueItem() || this.activeQueuedSongs().length > 0);
+                },
+
+                hidePlayer() {
+                    this.playerOverlayOpen = false;
+                    this.playerQueueOpen = false;
+                    this.playerChromeHidden = true;
+                },
+
+                ensurePlayerVisibility() {
+                    if (this.hasPlayerContent()) {
+                        return;
+                    }
+
+                    this.playerOverlayOpen = false;
+                    this.playerQueueOpen = false;
+                    this.playerCanceled = false;
+                    this.playerChromeHidden = true;
                 },
 
                 mergeQueueItem(item) {
@@ -160,6 +189,7 @@
                         item,
                         ...this.queueItems.filter((existing) => existing.id !== item.id),
                     ]);
+                    this.playerChromeHidden = false;
 
                     return item;
                 },
@@ -173,6 +203,7 @@
                     this.playerOverlayOpen = true;
                     this.playerCanceled = false;
                     this.playerQueueOpen = false;
+                    this.playerChromeHidden = false;
                     this.persistSelectedVideo();
                     this.savePlayHistory(video);
                 },
@@ -208,6 +239,12 @@
                 },
 
                 openPlayer() {
+                    if (!this.hasPlayerContent()) {
+                        this.ensurePlayerVisibility();
+                        return;
+                    }
+
+                    this.playerChromeHidden = false;
                     this.playerOverlayOpen = true;
                     this.playerQueueOpen = false;
                 },
@@ -223,6 +260,7 @@
                     this.playerCanceled = true;
                     this.playerNonce += 1;
                     this.persistSelectedVideo();
+                    this.ensurePlayerVisibility();
                 },
 
                 restartSelectedVideo() {
@@ -347,10 +385,12 @@
                     if (response.ok) {
                         this.forgetCanceledQueueItem(item);
                         this.queueItems = this.queueItems.filter((existing) => existing.id !== item.id);
+                        this.ensurePlayerVisibility();
                     }
                 },
 
                 togglePlayerQueue() {
+                    this.playerChromeHidden = false;
                     this.playerQueueOpen = !this.playerQueueOpen;
                 },
             };
@@ -374,7 +414,7 @@
     x-cloak
 >
     <section
-        x-show="playerOverlayOpen"
+        x-show="playerOverlayOpen && hasPlayerContent()"
         x-transition.opacity
         class="fixed inset-0 z-[180] bg-black text-white"
         aria-label="Karaoke player overlay"
@@ -466,7 +506,7 @@
     </section>
 
     <section
-        x-show="!playerOverlayOpen && (selectedVideo || playerCanceled || queuedQueueItems().length > 0)"
+        x-show="!playerOverlayOpen && hasPlayerContent() && !playerChromeHidden"
         x-transition
         class="fixed inset-x-0 bottom-0 z-[160] border-t border-white/10 bg-[#202020]/95 text-white shadow-2xl shadow-black backdrop-blur"
         aria-label="Mini karaoke player"
@@ -493,6 +533,7 @@
                 <button type="button" class="rounded-lg bg-white/10 px-2 py-2 text-[11px] font-bold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3 sm:text-xs" x-on:click="restartSelectedVideo" x-bind:disabled="!selectedVideo">Start over</button>
                 <button type="button" class="rounded-lg bg-white/10 px-2 py-2 text-[11px] font-bold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3 sm:text-xs" x-on:click="playNextQueuedSong" x-bind:disabled="!nextQueueItem()">Next</button>
                 <button type="button" class="rounded-lg bg-white/10 px-2 py-2 text-[11px] font-bold text-white transition hover:bg-white/15 sm:px-3 sm:text-xs" x-on:click="togglePlayerQueue">Queue</button>
+                <button type="button" class="rounded-lg bg-white/10 px-2 py-2 text-[11px] font-bold text-white transition hover:bg-white/15 sm:px-3 sm:text-xs" x-on:click="hidePlayer">Hide</button>
                 <button type="button" class="rounded-lg bg-red-500/15 px-2 py-2 text-[11px] font-bold text-red-100 transition hover:bg-red-500/25 sm:px-3 sm:text-xs" x-on:click="cancelPlayer" x-show="selectedVideo">Cancel</button>
             </div>
         </div>

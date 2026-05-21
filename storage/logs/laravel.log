@@ -586,3 +586,147 @@
     \"code\": 403,
     \"message\": \"The provided API key has an IP address restriction. The originating IP a (truncated...)
 "} 
+[2026-05-18 11:15:54] local.ERROR: The "--columns" option does not exist. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\RuntimeException(code: 0): The \"--columns\" option does not exist. at C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php:226)
+[stacktrace]
+#0 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(153): Symfony/Component/Console/Input/ArgvInput->addLongOption('columns', 'uri,name,action...')
+#1 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(88): Symfony/Component/Console/Input/ArgvInput->parseLongOption('--columns=uri,n...')
+#2 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(77): Symfony/Component/Console/Input/ArgvInput->parseToken('--columns=uri,n...', true)
+#3 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/Input.php(53): Symfony/Component/Console/Input/ArgvInput->parse()
+#4 C:/laragon/www/karaoke-site/vendor/symfony/console/Command/Command.php(245): Symfony/Component/Console/Input/Input->bind(Object(Symfony/Component/Console/Input/InputDefinition))
+#5 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Console/Command.php(249): Symfony/Component/Console/Command/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#6 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(1107): Illuminate/Console/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#7 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(356): Symfony/Component/Console/Application->doRunCommand(Object(Illuminate/Foundation/Console/RouteListCommand), Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#8 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(195): Symfony/Component/Console/Application->doRun(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#9 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony/Component/Console/Application->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#10 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#11 C:/laragon/www/karaoke-site/artisan(16): Illuminate/Foundation/Application->handleCommand(Object(Symfony/Component/Console/Input/ArgvInput))
+#12 {main}
+"} 
+[2026-05-18 11:16:02] local.ERROR: The "--columns" option does not exist. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\RuntimeException(code: 0): The \"--columns\" option does not exist. at C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php:226)
+[stacktrace]
+#0 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(153): Symfony/Component/Console/Input/ArgvInput->addLongOption('columns', 'uri,name,action...')
+#1 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(88): Symfony/Component/Console/Input/ArgvInput->parseLongOption('--columns=uri,n...')
+#2 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(77): Symfony/Component/Console/Input/ArgvInput->parseToken('--columns=uri,n...', true)
+#3 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/Input.php(53): Symfony/Component/Console/Input/ArgvInput->parse()
+#4 C:/laragon/www/karaoke-site/vendor/symfony/console/Command/Command.php(245): Symfony/Component/Console/Input/Input->bind(Object(Symfony/Component/Console/Input/InputDefinition))
+#5 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Console/Command.php(249): Symfony/Component/Console/Command/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#6 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(1107): Illuminate/Console/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#7 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(356): Symfony/Component/Console/Application->doRunCommand(Object(Illuminate/Foundation/Console/RouteListCommand), Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#8 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(195): Symfony/Component/Console/Application->doRun(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#9 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony/Component/Console/Application->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#10 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#11 C:/laragon/www/karaoke-site/artisan(16): Illuminate/Foundation/Application->handleCommand(Object(Symfony/Component/Console/Input/ArgvInput))
+#12 {main}
+"} 
+[2026-05-18 11:16:06] local.ERROR: The "--columns" option does not exist. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\RuntimeException(code: 0): The \"--columns\" option does not exist. at C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php:226)
+[stacktrace]
+#0 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(153): Symfony/Component/Console/Input/ArgvInput->addLongOption('columns', 'uri,name,action...')
+#1 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(88): Symfony/Component/Console/Input/ArgvInput->parseLongOption('--columns=uri,n...')
+#2 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(77): Symfony/Component/Console/Input/ArgvInput->parseToken('--columns=uri,n...', true)
+#3 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/Input.php(53): Symfony/Component/Console/Input/ArgvInput->parse()
+#4 C:/laragon/www/karaoke-site/vendor/symfony/console/Command/Command.php(245): Symfony/Component/Console/Input/Input->bind(Object(Symfony/Component/Console/Input/InputDefinition))
+#5 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Console/Command.php(249): Symfony/Component/Console/Command/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#6 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(1107): Illuminate/Console/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#7 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(356): Symfony/Component/Console/Application->doRunCommand(Object(Illuminate/Foundation/Console/RouteListCommand), Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#8 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(195): Symfony/Component/Console/Application->doRun(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#9 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony/Component/Console/Application->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#10 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#11 C:/laragon/www/karaoke-site/artisan(16): Illuminate/Foundation/Application->handleCommand(Object(Symfony/Component/Console/Input/ArgvInput))
+#12 {main}
+"} 
+[2026-05-21 16:53:59] local.ERROR: The "--columns" option does not exist. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\RuntimeException(code: 0): The \"--columns\" option does not exist. at C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php:226)
+[stacktrace]
+#0 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(153): Symfony/Component/Console/Input/ArgvInput->addLongOption('columns', 'uri,name,action...')
+#1 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(88): Symfony/Component/Console/Input/ArgvInput->parseLongOption('--columns=uri,n...')
+#2 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(77): Symfony/Component/Console/Input/ArgvInput->parseToken('--columns=uri,n...', true)
+#3 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/Input.php(53): Symfony/Component/Console/Input/ArgvInput->parse()
+#4 C:/laragon/www/karaoke-site/vendor/symfony/console/Command/Command.php(245): Symfony/Component/Console/Input/Input->bind(Object(Symfony/Component/Console/Input/InputDefinition))
+#5 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Console/Command.php(249): Symfony/Component/Console/Command/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#6 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(1107): Illuminate/Console/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#7 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(356): Symfony/Component/Console/Application->doRunCommand(Object(Illuminate/Foundation/Console/RouteListCommand), Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#8 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(195): Symfony/Component/Console/Application->doRun(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#9 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony/Component/Console/Application->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#10 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#11 C:/laragon/www/karaoke-site/artisan(16): Illuminate/Foundation/Application->handleCommand(Object(Symfony/Component/Console/Input/ArgvInput))
+#12 {main}
+"} 
+[2026-05-21 16:54:13] local.ERROR: The "--columns" option does not exist. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\RuntimeException(code: 0): The \"--columns\" option does not exist. at C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php:226)
+[stacktrace]
+#0 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(153): Symfony/Component/Console/Input/ArgvInput->addLongOption('columns', 'uri,name,action...')
+#1 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(88): Symfony/Component/Console/Input/ArgvInput->parseLongOption('--columns=uri,n...')
+#2 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(77): Symfony/Component/Console/Input/ArgvInput->parseToken('--columns=uri,n...', true)
+#3 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/Input.php(53): Symfony/Component/Console/Input/ArgvInput->parse()
+#4 C:/laragon/www/karaoke-site/vendor/symfony/console/Command/Command.php(245): Symfony/Component/Console/Input/Input->bind(Object(Symfony/Component/Console/Input/InputDefinition))
+#5 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Console/Command.php(249): Symfony/Component/Console/Command/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#6 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(1107): Illuminate/Console/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#7 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(356): Symfony/Component/Console/Application->doRunCommand(Object(Illuminate/Foundation/Console/RouteListCommand), Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#8 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(195): Symfony/Component/Console/Application->doRun(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#9 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony/Component/Console/Application->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#10 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#11 C:/laragon/www/karaoke-site/artisan(16): Illuminate/Foundation/Application->handleCommand(Object(Symfony/Component/Console/Input/ArgvInput))
+#12 {main}
+"} 
+[2026-05-21 16:54:19] local.ERROR: The "--columns" option does not exist. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\RuntimeException(code: 0): The \"--columns\" option does not exist. at C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php:226)
+[stacktrace]
+#0 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(153): Symfony/Component/Console/Input/ArgvInput->addLongOption('columns', 'uri,name,action...')
+#1 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(88): Symfony/Component/Console/Input/ArgvInput->parseLongOption('--columns=uri,n...')
+#2 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(77): Symfony/Component/Console/Input/ArgvInput->parseToken('--columns=uri,n...', true)
+#3 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/Input.php(53): Symfony/Component/Console/Input/ArgvInput->parse()
+#4 C:/laragon/www/karaoke-site/vendor/symfony/console/Command/Command.php(245): Symfony/Component/Console/Input/Input->bind(Object(Symfony/Component/Console/Input/InputDefinition))
+#5 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Console/Command.php(249): Symfony/Component/Console/Command/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#6 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(1107): Illuminate/Console/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#7 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(356): Symfony/Component/Console/Application->doRunCommand(Object(Illuminate/Foundation/Console/RouteListCommand), Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#8 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(195): Symfony/Component/Console/Application->doRun(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#9 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony/Component/Console/Application->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#10 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#11 C:/laragon/www/karaoke-site/artisan(16): Illuminate/Foundation/Application->handleCommand(Object(Symfony/Component/Console/Input/ArgvInput))
+#12 {main}
+"} 
+[2026-05-21 22:59:08] local.ERROR: The "--columns" option does not exist. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\RuntimeException(code: 0): The \"--columns\" option does not exist. at C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php:226)
+[stacktrace]
+#0 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(153): Symfony/Component/Console/Input/ArgvInput->addLongOption('columns', 'uri,name,action...')
+#1 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(88): Symfony/Component/Console/Input/ArgvInput->parseLongOption('--columns=uri,n...')
+#2 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(77): Symfony/Component/Console/Input/ArgvInput->parseToken('--columns=uri,n...', true)
+#3 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/Input.php(53): Symfony/Component/Console/Input/ArgvInput->parse()
+#4 C:/laragon/www/karaoke-site/vendor/symfony/console/Command/Command.php(245): Symfony/Component/Console/Input/Input->bind(Object(Symfony/Component/Console/Input/InputDefinition))
+#5 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Console/Command.php(249): Symfony/Component/Console/Command/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#6 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(1107): Illuminate/Console/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#7 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(356): Symfony/Component/Console/Application->doRunCommand(Object(Illuminate/Foundation/Console/RouteListCommand), Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#8 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(195): Symfony/Component/Console/Application->doRun(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#9 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony/Component/Console/Application->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#10 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#11 C:/laragon/www/karaoke-site/artisan(16): Illuminate/Foundation/Application->handleCommand(Object(Symfony/Component/Console/Input/ArgvInput))
+#12 {main}
+"} 
+[2026-05-21 22:59:12] local.ERROR: The "--columns" option does not exist. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\RuntimeException(code: 0): The \"--columns\" option does not exist. at C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php:226)
+[stacktrace]
+#0 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(153): Symfony/Component/Console/Input/ArgvInput->addLongOption('columns', 'uri,name,action...')
+#1 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(88): Symfony/Component/Console/Input/ArgvInput->parseLongOption('--columns=uri,n...')
+#2 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(77): Symfony/Component/Console/Input/ArgvInput->parseToken('--columns=uri,n...', true)
+#3 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/Input.php(53): Symfony/Component/Console/Input/ArgvInput->parse()
+#4 C:/laragon/www/karaoke-site/vendor/symfony/console/Command/Command.php(245): Symfony/Component/Console/Input/Input->bind(Object(Symfony/Component/Console/Input/InputDefinition))
+#5 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Console/Command.php(249): Symfony/Component/Console/Command/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#6 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(1107): Illuminate/Console/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#7 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(356): Symfony/Component/Console/Application->doRunCommand(Object(Illuminate/Foundation/Console/RouteListCommand), Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#8 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(195): Symfony/Component/Console/Application->doRun(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#9 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony/Component/Console/Application->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#10 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#11 C:/laragon/www/karaoke-site/artisan(16): Illuminate/Foundation/Application->handleCommand(Object(Symfony/Component/Console/Input/ArgvInput))
+#12 {main}
+"} 
+[2026-05-21 22:59:27] local.ERROR: The "--columns" option does not exist. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\RuntimeException(code: 0): The \"--columns\" option does not exist. at C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php:226)
+[stacktrace]
+#0 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(153): Symfony/Component/Console/Input/ArgvInput->addLongOption('columns', 'uri,name,action...')
+#1 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(88): Symfony/Component/Console/Input/ArgvInput->parseLongOption('--columns=uri,n...')
+#2 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/ArgvInput.php(77): Symfony/Component/Console/Input/ArgvInput->parseToken('--columns=uri,n...', true)
+#3 C:/laragon/www/karaoke-site/vendor/symfony/console/Input/Input.php(53): Symfony/Component/Console/Input/ArgvInput->parse()
+#4 C:/laragon/www/karaoke-site/vendor/symfony/console/Command/Command.php(245): Symfony/Component/Console/Input/Input->bind(Object(Symfony/Component/Console/Input/InputDefinition))
+#5 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Console/Command.php(249): Symfony/Component/Console/Command/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#6 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(1107): Illuminate/Console/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#7 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(356): Symfony/Component/Console/Application->doRunCommand(Object(Illuminate/Foundation/Console/RouteListCommand), Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#8 C:/laragon/www/karaoke-site/vendor/symfony/console/Application.php(195): Symfony/Component/Console/Application->doRun(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#9 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony/Component/Console/Application->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#10 C:/laragon/www/karaoke-site/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#11 C:/laragon/www/karaoke-site/artisan(16): Illuminate/Foundation/Application->handleCommand(Object(Symfony/Component/Console/Input/ArgvInput))
+#12 {main}
+"} 

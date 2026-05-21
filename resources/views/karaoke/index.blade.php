@@ -212,6 +212,40 @@
                     suggestionAbortController: null,
                     playerNonce: 0,
                     canceledQueueItemIds: [],
+                    playerChromeHidden: false,
+                    drawerSearchQuery: '',
+                    drawerSuggestions: [],
+                    drawerSuggestionLoading: false,
+                    drawerShowSuggestions: false,
+                    drawerSuggestionError: '',
+                    drawerSuggestionTimer: null,
+                    drawerSuggestionAbortController: null,
+                    scoringSession: null,
+                    scoringActive: false,
+                    scoringStatus: 'Enable the mic and play a song to start scoring.',
+                    liveScore: null,
+                    finalScore: null,
+                    finalScoreDetails: {
+                        volume: 0,
+                        pitch: 0,
+                        consistency: 0,
+                        activity: 0,
+                    },
+                    finalScoreOverlayOpen: false,
+                    recordingActive: false,
+                    recordingPreparing: false,
+                    recordingStatus: 'Recording is off.',
+                    recordingPreviewUrl: '',
+                    recordingBlob: null,
+                    recordingChunks: [],
+                    mediaRecorder: null,
+                    recordScreenStream: null,
+                    recordCameraStream: null,
+                    recordCanvas: null,
+                    recordCanvasContext: null,
+                    recordCanvasStream: null,
+                    recordingFrame: null,
+                    recordingStopTimer: null,
 
                     init() {
                         this.loadAudioDevices();
@@ -223,7 +257,11 @@
                             this.$nextTick(() => this.searchSongs());
                         }
 
-                        window.addEventListener('beforeunload', () => this.stopCurrentMicrophone());
+                        window.addEventListener('beforeunload', () => {
+                            this.stopCurrentMicrophone();
+                            this.stopRecordingStreams();
+                            this.clearDrawerSearch();
+                        });
                     },
 
                     uniqueVideos(videos) {
@@ -413,8 +451,30 @@
                         return this.activeQueuedSongs().length;
                     },
 
+                    hasPlayerContent() {
+                        return Boolean(this.selectedVideo || this.playingQueueItem() || this.activeQueuedSongs().length > 0);
+                    },
+
+                    hidePlayer() {
+                        this.playerOverlayOpen = false;
+                        this.playerQueueOpen = false;
+                        this.playerChromeHidden = true;
+                    },
+
+                    ensurePlayerVisibility() {
+                        if (this.hasPlayerContent()) {
+                            return;
+                        }
+
+                        this.playerOverlayOpen = false;
+                        this.playerQueueOpen = false;
+                        this.playerCanceled = false;
+                        this.playerChromeHidden = true;
+                    },
+
                     openPlayerFromHeader() {
                         if (this.selectedVideo) {
+                            this.playerChromeHidden = false;
                             this.playerOverlayOpen = true;
                             return;
                         }
@@ -427,6 +487,12 @@
                     },
 
                     openPlayer() {
+                        if (!this.hasPlayerContent()) {
+                            this.ensurePlayerVisibility();
+                            return;
+                        }
+
+                        this.playerChromeHidden = false;
                         this.playerOverlayOpen = true;
                         this.playerQueueOpen = false;
                     },
@@ -442,6 +508,8 @@
                         this.playerCanceled = true;
                         this.playerNonce += 1;
                         this.fullscreenStatus = 'Video canceled. Your queue is still saved for this session.';
+                        this.stopScoringSession();
+                        this.ensurePlayerVisibility();
                     },
 
                     primaryPlayerLabel() {
@@ -473,6 +541,7 @@
                     },
 
                     togglePlayerQueue() {
+                        this.playerChromeHidden = false;
                         this.playerQueueOpen = !this.playerQueueOpen;
                     },
 
@@ -645,12 +714,121 @@
                         this.clearSearch();
                     },
 
+                    clearDrawerSearch() {
+                        if (this.drawerSuggestionTimer) {
+                            clearTimeout(this.drawerSuggestionTimer);
+                            this.drawerSuggestionTimer = null;
+                        }
+
+                        if (this.drawerSuggestionAbortController) {
+                            this.drawerSuggestionAbortController.abort();
+                            this.drawerSuggestionAbortController = null;
+                        }
+
+                        this.drawerSearchQuery = '';
+                        this.drawerSuggestions = [];
+                        this.drawerSuggestionError = '';
+                        this.drawerSuggestionLoading = false;
+                        this.drawerShowSuggestions = false;
+                    },
+
+                    scheduleDrawerSuggestions() {
+                        const query = this.drawerSearchQuery.trim();
+                        this.drawerSuggestionError = '';
+
+                        if (this.drawerSuggestionTimer) {
+                            clearTimeout(this.drawerSuggestionTimer);
+                        }
+
+                        if (query.length < 2) {
+                            this.drawerSuggestions = [];
+                            this.drawerSuggestionLoading = false;
+                            this.drawerShowSuggestions = false;
+                            return;
+                        }
+
+                        this.drawerShowSuggestions = true;
+                        this.drawerSuggestionTimer = setTimeout(() => this.loadDrawerSuggestions(query), 450);
+                    },
+
+                    searchDrawerSongs() {
+                        const query = this.drawerSearchQuery.trim();
+
+                        if (query.length < 2) {
+                            this.drawerSuggestionError = 'Type at least two characters to search songs.';
+                            this.drawerShowSuggestions = true;
+                            return;
+                        }
+
+                        this.loadDrawerSuggestions(query);
+                    },
+
+                    async loadDrawerSuggestions(query) {
+                        if (this.drawerSuggestionAbortController) {
+                            this.drawerSuggestionAbortController.abort();
+                        }
+
+                        this.drawerSuggestionAbortController = new AbortController();
+                        this.drawerSuggestionLoading = true;
+                        this.drawerShowSuggestions = true;
+                        this.drawerSuggestionError = '';
+
+                        try {
+                            const response = await fetch(`${this.routes.search}?q=${encodeURIComponent(query)}`, {
+                                headers: {
+                                    Accept: 'application/json',
+                                },
+                                signal: this.drawerSuggestionAbortController.signal,
+                            });
+                            const data = await response.json().catch(() => ({}));
+
+                            if (!response.ok) {
+                                const validationMessage = data.errors && data.errors.q ? data.errors.q[0] : null;
+                                throw new Error(validationMessage || data.message || 'Could not load songs.');
+                            }
+
+                            const results = (data.results || []).slice(0, 8);
+                            this.drawerSuggestions = results;
+                            this.catalogVideos = this.uniqueVideos([
+                                ...results,
+                                ...this.catalogVideos,
+                            ]).slice(0, 48);
+
+                            if (results.length === 0) {
+                                this.drawerSuggestionError = 'No songs found. Try another title or artist.';
+                            }
+                        } catch (error) {
+                            if (error.name !== 'AbortError') {
+                                this.drawerSuggestionError = error.message || 'Could not load songs.';
+                                this.drawerSuggestions = [];
+                            }
+                        } finally {
+                            this.drawerSuggestionLoading = false;
+                        }
+                    },
+
+                    chooseDrawerSuggestion(video) {
+                        this.lastSearchQuery = video.title;
+                        this.playVideo(video);
+                        this.clearDrawerSearch();
+                    },
+
+                    async queueDrawerSuggestion(video) {
+                        this.lastSearchQuery = video.title;
+                        await this.addToQueue(video);
+                        this.clearDrawerSearch();
+                    },
+
                     playVideo(video) {
                         this.selectedVideo = video;
                         this.playerOverlayOpen = true;
                         this.playerCanceled = false;
                         this.playerQueueOpen = false;
+                        this.playerChromeHidden = false;
                         this.error = '';
+                        this.finalScoreOverlayOpen = false;
+                        this.finalScore = null;
+                        this.startScoringSession(video);
                         this.savePlayHistory(video);
                     },
 
@@ -773,6 +951,7 @@
                             queueItem,
                             ...this.queueItems.filter((existing) => existing.id !== queueItem.id),
                         ]);
+                        this.playerChromeHidden = false;
 
                         return queueItem;
                     },
@@ -880,7 +1059,9 @@
                                 const updatedItem = this.mergeQueueItem(data.queue_item);
 
                                 if (status === 'done') {
-                                    this.queueStatus = `${updatedItem.singer_name} finished with ${updatedItem.score || 0} points.`;
+                                    this.queueStatus = updatedItem.score === null
+                                        ? `${updatedItem.singer_name} finished without a score.`
+                                        : `${updatedItem.singer_name} finished with ${updatedItem.score} points.`;
                                 } else if (status === 'skipped') {
                                     this.queueStatus = `${updatedItem.singer_name}'s song was skipped.`;
                                 }
@@ -918,16 +1099,17 @@
                         this.queueStatus = `Playing ${nextItem.title} for ${nextItem.singer_name}.`;
                     },
 
-                    async finishQueueItem(item) {
-                        const score = this.scoreDrafts[item.id] ?? 85;
+                    async finishQueueItem(item, score = null) {
                         this.forgetCanceledQueueItem(item);
                         await this.updateQueueItem(item, 'done', score);
                         delete this.scoreDrafts[item.id];
+                        this.ensurePlayerVisibility();
                     },
 
                     async skipQueueItem(item) {
                         this.forgetCanceledQueueItem(item);
                         await this.updateQueueItem(item, 'skipped');
+                        this.ensurePlayerVisibility();
                     },
 
                     async removeQueueItem(item) {
@@ -950,6 +1132,7 @@
 
                             this.queueItems = this.queueItems.filter((existing) => existing.id !== item.id);
                             this.queueStatus = 'Removed from the queue.';
+                            this.ensurePlayerVisibility();
                         } catch (error) {
                             this.queueStatus = error.message || 'Could not remove this song.';
                         }
@@ -1055,16 +1238,545 @@
                         await this.saveFavorite(video, rating);
                     },
 
+                    currentPerformanceItem() {
+                        if (!this.selectedVideo) {
+                            return null;
+                        }
+
+                        if (this.selectedVideo.id) {
+                            return this.queueItems.find((item) => item.id === this.selectedVideo.id) || this.selectedVideo;
+                        }
+
+                        const playingItem = this.playingQueueItem();
+
+                        return playingItem?.video_id === this.selectedVideo.video_id ? playingItem : null;
+                    },
+
+                    startScoringSession(video = this.selectedVideo) {
+                        if (!video) {
+                            this.stopScoringSession();
+                            return;
+                        }
+
+                        if (!this.microphoneEnabled || !this.analyser) {
+                            this.scoringActive = false;
+                            this.liveScore = null;
+                            this.scoringStatus = 'Enable the mic to score this song. Without a mic, scoring will not work.';
+                            return;
+                        }
+
+                        this.scoringSession = {
+                            videoId: video.video_id,
+                            startedAt: Date.now(),
+                            frames: 0,
+                            voicedFrames: 0,
+                            totalVolume: 0,
+                            peakVolume: 0,
+                            pitchFrames: 0,
+                            stablePitchFrames: 0,
+                            consistencyTotal: 0,
+                            lastPitch: null,
+                        };
+                        this.scoringActive = true;
+                        this.liveScore = 0;
+                        this.finalScore = null;
+                        this.finalScoreOverlayOpen = false;
+                        this.scoringStatus = 'Scoring is listening to your mic.';
+                    },
+
+                    stopScoringSession() {
+                        this.scoringSession = null;
+                        this.scoringActive = false;
+                        this.liveScore = null;
+                    },
+
+                    ensureScoringSession() {
+                        if (!this.selectedVideo || !this.microphoneEnabled || !this.analyser) {
+                            return;
+                        }
+
+                        if (!this.scoringSession || this.scoringSession.videoId !== this.selectedVideo.video_id) {
+                            this.startScoringSession(this.selectedVideo);
+                        }
+                    },
+
+                    clampScore(value) {
+                        return Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
+                    },
+
+                    estimatePitch(samples) {
+                        if (!this.audioContext || !samples || samples.length < 512) {
+                            return null;
+                        }
+
+                        const sampleRate = this.audioContext.sampleRate || 44100;
+                        const minPitch = 80;
+                        const maxPitch = 1000;
+                        const minLag = Math.floor(sampleRate / maxPitch);
+                        const maxLag = Math.min(Math.floor(sampleRate / minPitch), samples.length - 1);
+                        const floats = new Float32Array(samples.length);
+                        let energy = 0;
+
+                        for (let index = 0; index < samples.length; index += 1) {
+                            const sample = (samples[index] - 128) / 128;
+                            floats[index] = sample;
+                            energy += sample * sample;
+                        }
+
+                        if (energy / samples.length < 0.002) {
+                            return null;
+                        }
+
+                        let bestLag = -1;
+                        let bestCorrelation = 0;
+
+                        for (let lag = minLag; lag <= maxLag; lag += 1) {
+                            let correlation = 0;
+
+                            for (let index = 0; index < samples.length - lag; index += 1) {
+                                correlation += floats[index] * floats[index + lag];
+                            }
+
+                            correlation /= samples.length - lag;
+
+                            if (correlation > bestCorrelation) {
+                                bestCorrelation = correlation;
+                                bestLag = lag;
+                            }
+                        }
+
+                        if (bestLag < 0 || bestCorrelation < 0.18) {
+                            return null;
+                        }
+
+                        return sampleRate / bestLag;
+                    },
+
+                    scoreBreakdown() {
+                        const session = this.scoringSession;
+
+                        if (!session || session.frames === 0) {
+                            return {
+                                score: 0,
+                                volume: 0,
+                                pitch: 0,
+                                consistency: 0,
+                                activity: 0,
+                            };
+                        }
+
+                        const activity = Math.min(100, (session.voicedFrames / session.frames) * 135);
+                        const averageVolume = session.totalVolume / session.frames;
+                        const volume = Math.min(100, (averageVolume * 2.2) + (session.peakVolume * 0.35));
+                        const pitch = session.voicedFrames > 0
+                            ? Math.min(100, (session.pitchFrames / session.voicedFrames) * 125)
+                            : 0;
+                        const consistency = session.pitchFrames > 1
+                            ? session.consistencyTotal / Math.max(1, session.pitchFrames - 1)
+                            : pitch * 0.65;
+                        const score = this.clampScore(
+                            (activity * 0.30)
+                            + (volume * 0.25)
+                            + (pitch * 0.25)
+                            + (consistency * 0.20),
+                        );
+
+                        return {
+                            score,
+                            volume: this.clampScore(volume),
+                            pitch: this.clampScore(pitch),
+                            consistency: this.clampScore(consistency),
+                            activity: this.clampScore(activity),
+                        };
+                    },
+
+                    updateScoring(samples, volume) {
+                        if (!this.selectedVideo) {
+                            return;
+                        }
+
+                        this.ensureScoringSession();
+
+                        if (!this.scoringActive || !this.scoringSession) {
+                            return;
+                        }
+
+                        const session = this.scoringSession;
+                        const voiced = volume >= 7;
+                        session.frames += 1;
+                        session.totalVolume += volume;
+                        session.peakVolume = Math.max(session.peakVolume, volume);
+
+                        if (voiced) {
+                            session.voicedFrames += 1;
+                            const pitch = this.estimatePitch(samples);
+
+                            if (pitch) {
+                                session.pitchFrames += 1;
+
+                                if (session.lastPitch) {
+                                    const cents = Math.abs(1200 * Math.log2(pitch / session.lastPitch));
+                                    const stability = Math.max(0, 100 - Math.min(100, cents * 1.8));
+                                    session.consistencyTotal += stability;
+
+                                    if (stability >= 55) {
+                                        session.stablePitchFrames += 1;
+                                    }
+                                }
+
+                                session.lastPitch = pitch;
+                            }
+                        }
+
+                        const breakdown = this.scoreBreakdown();
+                        this.liveScore = breakdown.score;
+                        this.finalScoreDetails = {
+                            volume: breakdown.volume,
+                            pitch: breakdown.pitch,
+                            consistency: breakdown.consistency,
+                            activity: breakdown.activity,
+                        };
+                    },
+
+                    async finishCurrentPerformance() {
+                        if (!this.selectedVideo) {
+                            this.scoringStatus = 'Choose or play a song before showing a score.';
+                            return;
+                        }
+
+                        const selected = this.selectedVideo;
+                        const item = this.currentPerformanceItem();
+                        let finalScore = null;
+
+                        if (this.microphoneEnabled && this.scoringSession && this.scoringSession.frames >= 10 && this.scoringSession.voicedFrames > 0) {
+                            const breakdown = this.scoreBreakdown();
+                            finalScore = breakdown.score;
+                            this.finalScoreDetails = {
+                                volume: breakdown.volume,
+                                pitch: breakdown.pitch,
+                                consistency: breakdown.consistency,
+                                activity: breakdown.activity,
+                            };
+                            this.scoringStatus = `${selected.title} scored ${finalScore} points.`;
+                        } else {
+                            this.finalScoreDetails = {
+                                volume: 0,
+                                pitch: 0,
+                                consistency: 0,
+                                activity: 0,
+                            };
+                            this.scoringStatus = 'Scoring was skipped because no microphone input was detected.';
+                        }
+
+                        this.finalScore = finalScore;
+                        this.finalScoreOverlayOpen = true;
+
+                        if (this.recordingActive) {
+                            this.stopRecordingAfterScoreCapture();
+                        }
+
+                        this.stopScoringSession();
+
+                        if (item?.id) {
+                            await this.finishQueueItem(item, finalScore);
+                        }
+
+                        if (this.selectedVideo?.video_id === selected.video_id) {
+                            this.selectedVideo = null;
+                            this.playerNonce += 1;
+                            this.playerOverlayOpen = false;
+                            this.playerCanceled = false;
+                            this.ensurePlayerVisibility();
+                        }
+                    },
+
+                    closeScoreOverlay() {
+                        this.finalScoreOverlayOpen = false;
+                    },
+
+                    preferredRecordingMimeType() {
+                        if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) {
+                            return '';
+                        }
+
+                        return [
+                            'video/webm;codecs=vp9,opus',
+                            'video/webm;codecs=vp8,opus',
+                            'video/webm',
+                        ].find((type) => MediaRecorder.isTypeSupported(type)) || '';
+                    },
+
+                    clearRecordingPreview() {
+                        if (this.recordingPreviewUrl) {
+                            URL.revokeObjectURL(this.recordingPreviewUrl);
+                        }
+
+                        this.recordingPreviewUrl = '';
+                        this.recordingBlob = null;
+                        this.recordingChunks = [];
+                    },
+
+                    async startRecording() {
+                        this.recordingStatus = '';
+
+                        if (!this.selectedVideo) {
+                            this.recordingStatus = 'Play a song before starting a recording.';
+                            return;
+                        }
+
+                        if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+                            this.recordingStatus = 'This browser cannot record the player, camera, and mic together.';
+                            return;
+                        }
+
+                        if (!this.microphoneEnabled) {
+                            await this.enableMicrophone();
+                        }
+
+                        if (!this.microphoneEnabled || !this.micStream) {
+                            this.recordingStatus = 'Recording needs microphone permission to capture singing audio.';
+                            return;
+                        }
+
+                        this.clearRecordingPreview();
+                        this.recordingPreparing = true;
+
+                        try {
+                            this.recordScreenStream = await navigator.mediaDevices.getDisplayMedia({
+                                video: {
+                                    frameRate: { ideal: 30, max: 30 },
+                                },
+                                audio: true,
+                            });
+                            this.recordCameraStream = await navigator.mediaDevices.getUserMedia({
+                                video: {
+                                    width: { ideal: 640 },
+                                    height: { ideal: 360 },
+                                    facingMode: 'user',
+                                },
+                                audio: false,
+                            });
+
+                            const screenVideo = this.$refs.recordScreenVideo;
+                            const cameraVideo = this.$refs.recordCameraVideo;
+
+                            screenVideo.srcObject = this.recordScreenStream;
+                            cameraVideo.srcObject = this.recordCameraStream;
+                            await Promise.all([
+                                screenVideo.play(),
+                                cameraVideo.play(),
+                            ]);
+
+                            const width = screenVideo.videoWidth || 1280;
+                            const height = screenVideo.videoHeight || 720;
+
+                            this.recordCanvas = document.createElement('canvas');
+                            this.recordCanvas.width = width;
+                            this.recordCanvas.height = height;
+                            this.recordCanvasContext = this.recordCanvas.getContext('2d');
+                            this.drawRecordingFrame();
+
+                            const canvasStream = this.recordCanvas.captureStream(30);
+                            const audioTracks = [
+                                ...this.recordScreenStream.getAudioTracks(),
+                                ...this.micStream.getAudioTracks(),
+                            ];
+                            const combinedStream = new MediaStream([
+                                ...canvasStream.getVideoTracks(),
+                                ...audioTracks,
+                            ]);
+                            const mimeType = this.preferredRecordingMimeType();
+
+                            this.recordCanvasStream = combinedStream;
+                            this.mediaRecorder = new MediaRecorder(combinedStream, mimeType ? { mimeType } : undefined);
+                            this.recordingChunks = [];
+                            this.mediaRecorder.ondataavailable = (event) => {
+                                if (event.data && event.data.size > 0) {
+                                    this.recordingChunks.push(event.data);
+                                }
+                            };
+                            this.mediaRecorder.onstop = () => this.finishRecordingPreview();
+                            this.mediaRecorder.start(1000);
+                            this.recordingActive = true;
+                            this.recordingStatus = this.recordScreenStream.getAudioTracks().length > 0
+                                ? 'Recording. Show the score to finish and include it in the video.'
+                                : 'Recording. Screen audio was not shared, but mic and camera are recording.';
+
+                            this.recordScreenStream.getVideoTracks().forEach((track) => {
+                                track.addEventListener('ended', () => this.stopRecording());
+                            });
+                        } catch (error) {
+                            this.stopRecordingStreams();
+
+                            if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+                                this.recordingStatus = 'No camera was found. Recording needs a camera.';
+                            } else if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                                this.recordingStatus = 'Recording permission was denied.';
+                            } else {
+                                this.recordingStatus = 'Could not start the recording.';
+                            }
+                        } finally {
+                            this.recordingPreparing = false;
+                        }
+                    },
+
+                    drawRecordingFrame() {
+                        if (!this.recordCanvas || !this.recordCanvasContext) {
+                            return;
+                        }
+
+                        const screenVideo = this.$refs.recordScreenVideo;
+                        const cameraVideo = this.$refs.recordCameraVideo;
+                        const context = this.recordCanvasContext;
+                        const width = this.recordCanvas.width;
+                        const height = this.recordCanvas.height;
+
+                        context.fillStyle = '#000';
+                        context.fillRect(0, 0, width, height);
+
+                        if (screenVideo && screenVideo.readyState >= 2) {
+                            context.drawImage(screenVideo, 0, 0, width, height);
+                        }
+
+                        if (cameraVideo && cameraVideo.readyState >= 2) {
+                            const pipWidth = Math.max(220, Math.round(width * 0.24));
+                            const pipHeight = Math.round(pipWidth * 9 / 16);
+                            const pipX = width - pipWidth - 28;
+                            const pipY = height - pipHeight - 28;
+
+                            context.fillStyle = 'rgba(0, 0, 0, 0.62)';
+                            context.fillRect(pipX - 8, pipY - 8, pipWidth + 16, pipHeight + 16);
+                            context.drawImage(cameraVideo, pipX, pipY, pipWidth, pipHeight);
+                        }
+
+                        this.recordingFrame = requestAnimationFrame(() => this.drawRecordingFrame());
+                    },
+
+                    stopRecordingAfterScoreCapture() {
+                        if (this.recordingStopTimer) {
+                            clearTimeout(this.recordingStopTimer);
+                        }
+
+                        this.recordingStatus = 'Score is visible. Recording will stop after it is captured.';
+                        this.recordingStopTimer = setTimeout(() => this.stopRecording(), 1800);
+                    },
+
+                    stopRecording() {
+                        if (this.recordingStopTimer) {
+                            clearTimeout(this.recordingStopTimer);
+                            this.recordingStopTimer = null;
+                        }
+
+                        if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+                            this.mediaRecorder.stop();
+                            return;
+                        }
+
+                        this.stopRecordingStreams();
+                    },
+
+                    finishRecordingPreview() {
+                        const mimeType = this.recordingChunks[0]?.type || 'video/webm';
+                        const blob = new Blob(this.recordingChunks, { type: mimeType });
+
+                        this.stopRecordingStreams();
+
+                        if (blob.size === 0) {
+                            this.recordingStatus = 'Recording ended without video data.';
+                            return;
+                        }
+
+                        this.recordingBlob = blob;
+                        this.recordingPreviewUrl = URL.createObjectURL(blob);
+                        this.recordingStatus = 'Recording ready to preview.';
+                    },
+
+                    stopRecordingStreams() {
+                        if (this.recordingFrame) {
+                            cancelAnimationFrame(this.recordingFrame);
+                            this.recordingFrame = null;
+                        }
+
+                        [this.recordScreenStream, this.recordCameraStream].forEach((stream) => {
+                            if (stream) {
+                                stream.getTracks().forEach((track) => track.stop());
+                            }
+                        });
+
+                        if (this.recordCanvasStream) {
+                            this.recordCanvasStream.getVideoTracks().forEach((track) => track.stop());
+                        }
+
+                        if (this.$refs.recordScreenVideo) {
+                            this.$refs.recordScreenVideo.srcObject = null;
+                        }
+
+                        if (this.$refs.recordCameraVideo) {
+                            this.$refs.recordCameraVideo.srcObject = null;
+                        }
+
+                        this.recordScreenStream = null;
+                        this.recordCameraStream = null;
+                        this.recordCanvasStream = null;
+                        this.recordCanvas = null;
+                        this.recordCanvasContext = null;
+                        this.mediaRecorder = null;
+                        this.recordingActive = false;
+                        this.recordingPreparing = false;
+                    },
+
+                    cancelRecording() {
+                        this.recordingChunks = [];
+
+                        if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+                            this.mediaRecorder.onstop = () => {
+                                this.stopRecordingStreams();
+                                this.clearRecordingPreview();
+                                this.recordingStatus = 'Recording canceled.';
+                            };
+                            this.mediaRecorder.stop();
+                            return;
+                        }
+
+                        this.stopRecordingStreams();
+                        this.clearRecordingPreview();
+                        this.recordingStatus = 'Recording canceled.';
+                    },
+
+                    discardRecording() {
+                        this.clearRecordingPreview();
+                        this.recordingStatus = 'Recording discarded.';
+                    },
+
+                    saveRecording() {
+                        if (!this.recordingBlob) {
+                            this.recordingStatus = 'No recording is ready to save.';
+                            return;
+                        }
+
+                        const url = this.recordingPreviewUrl || URL.createObjectURL(this.recordingBlob);
+                        const link = document.createElement('a');
+                        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                        link.href = url;
+                        link.download = `mykaraoke-${timestamp}.webm`;
+                        document.body.appendChild(link);
+                        link.click();
+                        link.remove();
+                        this.recordingStatus = 'Recording saved as a download.';
+                    },
+
                     async enableMicrophone() {
                         this.error = '';
 
                         if (!window.isSecureContext) {
                             this.microphoneStatus = 'Microphone access needs HTTPS or localhost.';
+                            this.scoringStatus = 'Scoring might not work because microphone access is blocked.';
                             return;
                         }
 
                         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                             this.microphoneStatus = 'This browser does not support microphone access.';
+                            this.scoringStatus = 'Scoring might not work because this browser cannot access a mic.';
                             return;
                         }
 
@@ -1082,9 +1794,11 @@
                             this.microphoneStatus = 'Microphone is listening.';
                             await this.loadAudioDevices(true);
                             this.startVolumeMeter(stream);
+                            this.ensureScoringSession();
                         } catch (error) {
                             this.microphoneEnabled = false;
                             this.volumeLevel = 0;
+                            this.stopScoringSession();
 
                             if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
                                 this.microphoneStatus = 'Microphone permission was denied.';
@@ -1095,6 +1809,8 @@
                             } else {
                                 this.microphoneStatus = 'Could not start the microphone.';
                             }
+
+                            this.scoringStatus = `${this.microphoneStatus} Scoring might not work.`;
                         }
                     },
 
@@ -1133,7 +1849,7 @@
 
                         this.audioContext = new AudioContext();
                         this.analyser = this.audioContext.createAnalyser();
-                        this.analyser.fftSize = 256;
+                        this.analyser.fftSize = 2048;
                         this.audioSource = this.audioContext.createMediaStreamSource(stream);
                         this.audioSource.connect(this.analyser);
 
@@ -1150,6 +1866,7 @@
 
                             const rms = Math.sqrt(sum / samples.length);
                             this.volumeLevel = Math.min(100, Math.round(rms * 180));
+                            this.updateScoring(samples, this.volumeLevel);
                             this.meterFrame = requestAnimationFrame(tick);
                         };
 
@@ -1390,6 +2107,37 @@
                             </div>
                             <div class="mt-3 h-4 overflow-hidden rounded-full bg-neutral-800">
                                 <div class="h-full rounded-full bg-violet-300 transition-[width] duration-75" x-bind:style="`width: ${volumeLevel}%`"></div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 grid gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-sm sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
+                            <div class="grid h-16 w-16 place-items-center rounded-full bg-emerald-500/15 text-xl font-black text-emerald-100" x-text="liveScore === null ? '--' : liveScore"></div>
+                            <div class="min-w-0">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="font-semibold text-white">Singing score</span>
+                                    <span class="rounded-full bg-white/10 px-2 py-1 text-[11px] font-bold uppercase text-violet-100" x-text="scoringActive ? 'live' : 'standby'"></span>
+                                </div>
+                                <p class="mt-1 text-xs leading-5 text-neutral-400" x-text="scoringStatus"></p>
+                                <div class="mt-3 grid grid-cols-4 gap-2 text-[11px] text-neutral-400">
+                                    <span x-text="`Vol ${finalScoreDetails.volume}`"></span>
+                                    <span x-text="`Pitch ${finalScoreDetails.pitch}`"></span>
+                                    <span x-text="`Tone ${finalScoreDetails.consistency}`"></span>
+                                    <span x-text="`Active ${finalScoreDetails.activity}`"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+                            <div class="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <p class="text-sm font-semibold text-white">Performance recording</p>
+                                    <p class="mt-1 text-xs text-neutral-400" x-text="recordingStatus"></p>
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" class="rounded-full bg-white/10 px-3 py-2 text-xs font-bold text-white transition hover:bg-[#4c1d95]/60 disabled:cursor-not-allowed disabled:opacity-50" x-show="!recordingActive" x-on:click="startRecording" x-bind:disabled="!selectedVideo || recordingPreparing" x-text="recordingPreparing ? 'Preparing...' : 'Start recording'"></button>
+                                    <button type="button" class="rounded-full bg-red-500/15 px-3 py-2 text-xs font-bold text-red-100 transition hover:bg-red-500/25" x-show="recordingActive" x-on:click="cancelRecording">Cancel recording</button>
+                                    <button type="button" class="rounded-full bg-emerald-500/15 px-3 py-2 text-xs font-bold text-emerald-100 transition hover:bg-emerald-500/25 disabled:cursor-not-allowed disabled:opacity-50" x-on:click="finishCurrentPerformance" x-bind:disabled="!selectedVideo">Show score</button>
+                                </div>
                             </div>
                         </div>
                     </section>
@@ -1645,7 +2393,7 @@
             </footer>
 
             <section
-                x-show="playerOverlayOpen"
+                x-show="playerOverlayOpen && hasPlayerContent()"
                 x-transition.opacity
                 class="fixed inset-0 z-[180] bg-black text-white"
                 aria-label="Karaoke player overlay"
@@ -1704,10 +2452,12 @@
                                 <div class="min-w-0">
                                     <p class="line-clamp-1 text-lg font-black text-violet-100" x-text="selectedVideo ? selectedVideo.title : (nextQueueItem() ? nextQueueItem().title : 'No song selected')"></p>
                                     <p class="mt-1 truncate text-sm text-neutral-400" x-text="selectedVideo ? selectedVideo.channel_title : (nextQueueItem() ? nextQueueItem().channel_title : 'Choose or queue a song to start.')"></p>
+                                    <p class="mt-1 truncate text-xs text-violet-100/80" x-show="selectedVideo" x-text="liveScore === null ? scoringStatus : `Live score ${liveScore} - ${scoringStatus}`"></p>
+                                    <p class="mt-1 truncate text-xs text-neutral-400" x-show="recordingStatus && (recordingActive || recordingPreparing)" x-text="recordingStatus"></p>
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-3 gap-2 sm:flex sm:items-center sm:gap-3">
+                            <div class="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-3">
                                 <button type="button" class="karaoke-overlay-button inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-xs font-bold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-3 sm:text-sm" x-on:click="restartSelectedVideo" x-bind:disabled="!selectedVideo">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5" aria-hidden="true">
                                         <path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 1 1-2.955-5.21.75.75 0 1 0 .686-1.333 7 7 0 1 0 3.758 6.635.75.75 0 1 0-1.489-.092Z" clip-rule="evenodd" />
@@ -1727,6 +2477,15 @@
                                     </svg>
                                     <span>Queue</span>
                                 </button>
+                                <button type="button" class="karaoke-overlay-button inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-emerald-500/15 px-3 py-2 text-xs font-bold text-emerald-100 transition hover:bg-emerald-500/25 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-3 sm:text-sm" x-on:click="finishCurrentPerformance" x-bind:disabled="!selectedVideo">
+                                    <span>Show score</span>
+                                </button>
+                                <button type="button" class="karaoke-overlay-button inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-xs font-bold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-3 sm:text-sm" x-show="!recordingActive" x-on:click="startRecording" x-bind:disabled="!selectedVideo || recordingPreparing">
+                                    <span x-text="recordingPreparing ? 'Preparing...' : 'Record'"></span>
+                                </button>
+                                <button type="button" class="karaoke-overlay-button inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-red-500/15 px-3 py-2 text-xs font-bold text-red-100 transition hover:bg-red-500/25 sm:px-4 sm:py-3 sm:text-sm" x-show="recordingActive" x-on:click="cancelRecording">
+                                    <span>Cancel recording</span>
+                                </button>
                             </div>
 
                             <div class="flex sm:items-center">
@@ -1743,7 +2502,7 @@
             </section>
 
             <section
-                x-show="!playerOverlayOpen && (selectedVideo || playerCanceled || queuedQueueItems().length > 0)"
+                x-show="!playerOverlayOpen && hasPlayerContent() && !playerChromeHidden"
                 x-transition
                 class="fixed inset-x-0 bottom-0 z-[160] border-t border-white/10 bg-[#202020]/95 text-white shadow-2xl shadow-black backdrop-blur"
                 aria-label="Mini karaoke player"
@@ -1773,6 +2532,7 @@
                         <button type="button" class="rounded-lg bg-white/10 px-2 py-2 text-[11px] font-bold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3 sm:text-xs" x-on:click="restartSelectedVideo" x-bind:disabled="!selectedVideo">Start over</button>
                         <button type="button" class="rounded-lg bg-white/10 px-2 py-2 text-[11px] font-bold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3 sm:text-xs" x-on:click="playNextQueuedSong" x-bind:disabled="!nextQueueItem()">Next</button>
                         <button type="button" class="rounded-lg bg-white/10 px-2 py-2 text-[11px] font-bold text-white transition hover:bg-white/15 sm:px-3 sm:text-xs" x-on:click="togglePlayerQueue">Queue</button>
+                        <button type="button" class="rounded-lg bg-white/10 px-2 py-2 text-[11px] font-bold text-white transition hover:bg-white/15 sm:px-3 sm:text-xs" x-on:click="hidePlayer">Hide</button>
                         <button type="button" class="rounded-lg bg-red-500/15 px-2 py-2 text-[11px] font-bold text-red-100 transition hover:bg-red-500/25 sm:px-3 sm:text-xs" x-on:click="cancelPlayer" x-show="selectedVideo">Cancel</button>
                     </div>
                 </div>
@@ -1793,6 +2553,60 @@
                     <label for="drawer-singer-name" class="text-sm font-medium text-neutral-300">Singer name</label>
                     <input id="drawer-singer-name" type="text" x-model="singerName" maxlength="80" placeholder="Guest" class="min-h-12 w-full rounded-full border border-white/10 bg-[#09090d] px-4 py-3 text-sm text-white outline-none transition placeholder:text-neutral-500 focus:border-violet-300 focus:ring-2 focus:ring-violet-300/30">
                     <p class="text-sm text-violet-100/80" x-show="queueStatus" x-text="queueStatus"></p>
+
+                    <form class="rounded-2xl border border-white/10 bg-white/[0.04] p-3" x-on:submit.prevent="searchDrawerSongs" x-on:click.outside="drawerShowSuggestions = false">
+                        <label for="drawer-song-search" class="mb-2 block text-xs font-semibold uppercase text-neutral-400">Find a song</label>
+                        <div class="relative">
+                            <input
+                                id="drawer-song-search"
+                                type="search"
+                                x-model="drawerSearchQuery"
+                                x-on:input="scheduleDrawerSuggestions"
+                                x-on:focus="drawerSearchQuery.trim().length >= 2 && (drawerShowSuggestions = true)"
+                                maxlength="100"
+                                autocomplete="off"
+                                placeholder="Search songs or artists"
+                                class="min-h-12 w-full rounded-full border border-white/10 bg-[#09090d] py-3 pl-4 pr-20 text-sm text-white outline-none transition placeholder:text-neutral-500 focus:border-violet-300 focus:ring-2 focus:ring-violet-300/30"
+                            >
+                            <button
+                                type="button"
+                                class="absolute right-12 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-neutral-400 transition hover:bg-white/10 hover:text-white"
+                                x-show="drawerSearchQuery.length > 0"
+                                x-on:click="clearDrawerSearch"
+                                aria-label="Clear queue search"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5" aria-hidden="true">
+                                    <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                                </svg>
+                            </button>
+                            <button type="submit" class="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-[#4c1d95] text-white transition hover:bg-[#5b21b6]" aria-label="Search songs from queue panel">
+                                <span x-show="!drawerSuggestionLoading">Go</span>
+                                <span x-show="drawerSuggestionLoading" class="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white"></span>
+                            </button>
+                        </div>
+                        <div class="mt-3 space-y-2" x-show="drawerShowSuggestions && (drawerSuggestionLoading || drawerSuggestions.length > 0 || drawerSuggestionError)" x-transition>
+                            <template x-for="video in drawerSuggestions" x-bind:key="`drawer-suggestion-${video.video_id}`">
+                                <article class="rounded-xl border border-white/10 bg-black/20 p-2">
+                                    <div class="flex items-start gap-3">
+                                        <div class="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-neutral-800">
+                                            <img x-show="video.thumbnail_url" x-bind:src="video.thumbnail_url" x-bind:alt="video.title" class="h-full w-full object-cover">
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <p class="line-clamp-2 text-sm font-semibold text-white" x-text="video.title"></p>
+                                            <p class="mt-1 truncate text-xs text-neutral-500" x-text="video.channel_title"></p>
+                                            <div class="mt-3 flex flex-wrap gap-2">
+                                                <button type="button" class="rounded-full bg-[#4c1d95] px-3 py-1.5 text-xs font-bold text-white transition hover:bg-[#5b21b6]" x-on:click="chooseDrawerSuggestion(video)">Play</button>
+                                                <button type="button" class="rounded-full bg-white/10 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50" x-on:click="queueDrawerSuggestion(video)" x-bind:disabled="queueLoading">Queue</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </article>
+                            </template>
+                            <div class="rounded-xl border border-white/10 bg-white/[0.04] p-3 text-sm text-neutral-400" x-show="drawerSuggestionLoading">Finding songs...</div>
+                            <div class="rounded-xl border border-red-300/20 bg-red-500/10 p-3 text-sm text-red-100" x-show="drawerSuggestionError" x-text="drawerSuggestionError"></div>
+                        </div>
+                    </form>
+
                     <div class="flex items-center justify-between text-sm">
                         <span class="font-semibold">Waiting</span>
                         <span class="text-neutral-400" x-text="`${readyQueueCount()} ready / ${queuedQueueItems().length} saved`"></span>
@@ -1822,6 +2636,70 @@
                     <div class="rounded-2xl border border-dashed border-white/10 p-4 text-sm text-neutral-500" x-show="queuedQueueItems().length === 0">No songs are queued yet.</div>
                 </div>
             </aside>
+
+            <section
+                x-show="finalScoreOverlayOpen"
+                x-transition.opacity
+                class="fixed inset-0 z-[210] grid place-items-center bg-black/80 px-4 py-8 text-white backdrop-blur"
+                aria-label="Final karaoke score"
+            >
+                <div class="w-full max-w-lg rounded-lg border border-white/10 bg-[#101014] p-6 text-center shadow-2xl shadow-black">
+                    <p class="text-sm font-bold uppercase text-violet-200">Final score</p>
+                    <div class="mx-auto mt-5 grid h-36 w-36 place-items-center rounded-full bg-emerald-500/15 text-5xl font-black text-emerald-100">
+                        <span x-text="finalScore === null ? '--' : finalScore"></span>
+                    </div>
+                    <h2 class="mt-5 text-2xl font-black" x-text="finalScore === null ? 'Scoring unavailable' : 'Performance scored'"></h2>
+                    <p class="mt-2 text-sm leading-6 text-neutral-400" x-text="scoringStatus"></p>
+                    <div class="mt-5 grid grid-cols-2 gap-3 text-left text-sm sm:grid-cols-4">
+                        <div class="rounded-xl bg-white/[0.06] p-3">
+                            <p class="text-xs text-neutral-500">Volume</p>
+                            <p class="mt-1 font-black text-white" x-text="finalScoreDetails.volume"></p>
+                        </div>
+                        <div class="rounded-xl bg-white/[0.06] p-3">
+                            <p class="text-xs text-neutral-500">Pitch</p>
+                            <p class="mt-1 font-black text-white" x-text="finalScoreDetails.pitch"></p>
+                        </div>
+                        <div class="rounded-xl bg-white/[0.06] p-3">
+                            <p class="text-xs text-neutral-500">Tone</p>
+                            <p class="mt-1 font-black text-white" x-text="finalScoreDetails.consistency"></p>
+                        </div>
+                        <div class="rounded-xl bg-white/[0.06] p-3">
+                            <p class="text-xs text-neutral-500">Active</p>
+                            <p class="mt-1 font-black text-white" x-text="finalScoreDetails.activity"></p>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex flex-wrap justify-center gap-3">
+                        <button type="button" class="rounded-full bg-[#4c1d95] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#5b21b6]" x-on:click="closeScoreOverlay">Close score</button>
+                        <button type="button" class="rounded-full bg-white/10 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/15" x-on:click="openPlayerFromHeader" x-show="nextQueueItem()">Play next</button>
+                    </div>
+                </div>
+            </section>
+
+            <section
+                x-show="recordingPreviewUrl"
+                x-transition.opacity
+                class="fixed inset-0 z-[220] grid place-items-center bg-black/85 px-4 py-8 text-white backdrop-blur"
+                aria-label="Recording preview"
+            >
+                <div class="w-full max-w-3xl rounded-lg border border-white/10 bg-[#101014] p-4 shadow-2xl shadow-black sm:p-6">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <p class="text-sm font-semibold text-violet-200">Recording preview</p>
+                            <h2 class="mt-1 text-2xl font-black">Review your take</h2>
+                        </div>
+                        <button type="button" class="rounded-full bg-white/10 px-3 py-2 text-sm font-bold transition hover:bg-white/15" x-on:click="discardRecording">Cancel</button>
+                    </div>
+                    <video x-bind:src="recordingPreviewUrl" controls class="mt-5 aspect-video w-full rounded-lg bg-black"></video>
+                    <p class="mt-3 text-sm text-neutral-400" x-text="recordingStatus"></p>
+                    <div class="mt-5 flex flex-wrap gap-3">
+                        <button type="button" class="rounded-full bg-[#4c1d95] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#5b21b6]" x-on:click="saveRecording">Save recording</button>
+                        <button type="button" class="rounded-full bg-white/10 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/15" x-on:click="discardRecording">Do not save</button>
+                    </div>
+                </div>
+            </section>
+
+            <video x-ref="recordScreenVideo" muted playsinline class="hidden"></video>
+            <video x-ref="recordCameraVideo" muted playsinline class="hidden"></video>
         </div>
     </body>
 </html>
